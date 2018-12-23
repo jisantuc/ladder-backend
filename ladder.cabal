@@ -21,6 +21,7 @@ library
                      , Data.Season
                      , Data.Time
                      , Data.Venue
+                     , Error
                      , Rating
   build-depends:       base >= 4.7 && < 5
                      , aeson

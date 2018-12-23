@@ -1,29 +1,28 @@
 module Rating ( eloUpdate
+              , eloUpdateWithConstant
               , perMatchWinProbability
               , matchSeqWinProbability
-              , makeFairMatch ) where
+              , validateMatchup ) where
 
 import           Data.Matchup                     (Matchup)
+import           Debug.Trace
+import           Error                            (Message (..))
 import           Statistics.Distribution          (cumulative)
 import           Statistics.Distribution.Binomial (binomial)
 
-data FairMatch = FairMatch { lowerRankedMustWin            :: Int
-                           , higherRankedMustWin           :: Int
-                           , lowerRankedVictoryProbability :: Double } deriving (Eq, Show)
+eloUpdateWithConstant :: Int -> Double -> Double -> (Int, Int)
+eloUpdateWithConstant k winnerRating loserRating =
+  let
+    probLoser = ( 1 / ( 1 + 10 ** ((winnerRating - loserRating) / 400)) )
+    probWinner = 1 - probLoser
+    newWinnerRating = winnerRating + fromIntegral k * (1 - probWinner)
+    newLoserRating = loserRating + fromIntegral k * (0 - probLoser)
+  in
+    (round newWinnerRating, round newLoserRating)
 
 eloUpdate :: Double -> Double -> (Int, Int)
 eloUpdate winnerRating loserRating =
-  let
-    -- constant -- scaling factor for score adjustments
-    -- gives 15 points to winner in even matches, which seems fine
-    k = 30
-    -- prior likelihood that the winner would have lost the match
-    probLoser = ( 1 / ( 1 + 10 ** ((winnerRating - loserRating) / 400)) )
-    probWinner = 1 - probLoser
-    newWinnerRating = winnerRating + k * (1 - probWinner)
-    newLoserRating = loserRating + k * (0 - probLoser)
-  in
-    (round newWinnerRating, round newLoserRating)
+  eloUpdateWithConstant 20 winnerRating loserRating
 
 matchSeqLikelihood :: Int -> Int -> Double -> Double -> Double
 matchSeqLikelihood gamesWon oppGamesWon rating oppRating = undefined
@@ -39,21 +38,14 @@ matchSeqWinProbability :: Int -> Double -> Double -> Double
 matchSeqWinProbability nMatches nMatchesMustWin perMatchProbability =
   1 - (cumulative (binomial (nMatches + 1) perMatchProbability) nMatchesMustWin)
 
-makeFairMatch :: Double -> Double -> FairMatch
-makeFairMatch rating1 rating2 =
+validateMatchup :: Double -> Double -> Either Message ()
+validateMatchup rating1 rating2 =
   let
-    lowerRankedPerMatchProbability =
-      perMatchWinProbability (rating1 `max` rating2) (rating1 `min` rating2)
-    m = 5
-  -- problem: choose a number of matches n and a win condition out of those matches m
-  -- such that:
-  --
-  -- cumulative (binomial n m) ~= 50%
+    tilt = (matchSeqWinProbability 10 6 $ perMatchWinProbability rating1 rating2)
   in
-    go m lowerRankedPerMatchProbability
-  where
-    go numberOfMatches perMatchSuccessRate
-      | abs(matchSeqWinProbability 10 numberOfMatches perMatchSuccessRate - 0.5) <= 0.05 =
-        FairMatch (round numberOfMatches) (round $ 10 - numberOfMatches) (matchSeqWinProbability 10 numberOfMatches perMatchSuccessRate)
-      | otherwise =
-        go (numberOfMatches - 1) perMatchSuccessRate
+    if (tilt < 0.25 || 1 - tilt < 0.25) then
+      Left $ UnbalancedMatch ("Lower-ranked player has only a " ++
+                              show ((tilt `min` 1 - tilt) * 100) ++
+                              "% chance to win")
+    else
+      Right ()
