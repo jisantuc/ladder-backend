@@ -1,0 +1,11 @@
+{
+  "driver": "postgresql",
+  "protocol": "tcp",
+  "host": "localhost",
+  "port": 5432,
+  "user": "ladder",
+  "password": "ladder",
+  "database": "ladder",
+  "directory": "./migrations",
+  "table": "migrations"
+}
