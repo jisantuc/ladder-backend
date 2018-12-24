@@ -15,25 +15,22 @@ import           Statistics.Distribution.Binomial (binomial)
 race :: Int
 race = 6
 
-eloUpdateWithConstant :: Int -> Double -> Double -> (Int, Int)
-eloUpdateWithConstant k winnerRating loserRating =
+eloUpdateWithConstant :: Int -> Int -> Double -> Double -> (Int, Int)
+eloUpdateWithConstant k oppGamesWon winnerRating loserRating =
   let
-    probLoser = ( 1 / ( 1 + 10 ** ((winnerRating - loserRating) / 400)) )
-    probWinner = 1 - probLoser
+    probWinner = matchSeqLikelihood oppGamesWon winnerRating loserRating
+    probLoser = 1 - probWinner
     newWinnerRating = winnerRating + fromIntegral k * (1 - probWinner)
     newLoserRating = loserRating + fromIntegral k * (0 - probLoser)
   in
     (round newWinnerRating, round newLoserRating)
 
-eloUpdate :: Double -> Double -> (Int, Int)
-eloUpdate winnerRating loserRating =
-  eloUpdateWithConstant 20 winnerRating loserRating
+eloUpdate :: Int -> Double -> Double -> (Int, Int)
+eloUpdate oppGamesWon winnerRating loserRating =
+  eloUpdateWithConstant 20 oppGamesWon winnerRating loserRating
 
 matchSeqLikelihood :: Int -> Double -> Double -> Double
 matchSeqLikelihood oppGamesWon rating oppRating =
-  -- Problem: given that I won, what was the prior likelihood that you would have won
-  -- no more than oppGamesWon racks?
-  -- possibly just simulate this out for some probabilities and make a lookup
   let
     favoredWon = rating > oppRating
     perMatchSuccessRate =
@@ -44,7 +41,7 @@ matchSeqLikelihood oppGamesWon rating oppRating =
       else
         1 - perMatchSuccessRate
   in
-    undefined
+    cumulative (binomial (race + oppGamesWon) winnerPerMatchSuccess) (fromIntegral oppGamesWon)
 
 {-Calculate the likelihood that the higher-ranked of two elo ratings wins a rack
 -}

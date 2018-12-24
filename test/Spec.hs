@@ -12,11 +12,6 @@ main = hspec spec
 
 spec :: Spec
 spec = do
-  describe "Ratings adjustments" $ do
-    it "matches what's on https://www.geeksforgeeks.org/elo-rating-algorithm/ for an upset" $ do
-      eloUpdateWithConstant 30 1000 1200 `shouldBe` (1023, 1177)
-    it "matches what's on https://www.geeksforgeeks.org/elo-rating-algorithm/ for a non-upset" $ do
-      eloUpdateWithConstant 30 1200 1000 `shouldBe` (1207, 993)
   describe "Match sequence likelihood calculations" $ do
     it "should think players with equal odds are equally likely to win" $ do
       round (matchSeqWinProbability 10000 5000 0.5 * 100) `shouldBe` 50
@@ -36,4 +31,6 @@ spec = do
       matchSeqLikelihood (race - 1) 1010 1000 `shouldSatisfy` (\x -> abs (x - 0.5) < 0.05)
       matchSeqLikelihood (race - 1) 1000 1010 `shouldSatisfy` (\x -> abs (x - 0.5) < 0.05)
     it "should think unbalanced matchups are unbalanced" $ do
-      matchSeqLikelihood (race - 1) 5000 1000 `shouldSatisfy` (\x -> x < matchSeqLikelihood (race - 3) 5000 1000)
+      matchSeqLikelihood (race - 1) 1100 1000 `shouldSatisfy` (\x -> x > matchSeqLikelihood (race - 1) 1000 1100)
+    it "should think higher ranked players are more likely to win by a given margin" $ do
+      matchSeqLikelihood 3 1100 1000 `shouldSatisfy` (\x -> x < matchSeqLikelihood 3 1200 1000)
