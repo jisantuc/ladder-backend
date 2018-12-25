@@ -1,6 +1,6 @@
-module Data.Venue (Venue) where
+module Data.Ladder.Venue (Venue) where
 
-import qualified Data.Time                        as Time
+import qualified Data.Ladder.Time                 as Time
 import           Data.UUID                        (UUID)
 import qualified Database.PostgreSQL.Simple.Types as Postgres
 

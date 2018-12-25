@@ -1,4 +1,4 @@
-module Data.Matchup ( Matchup ) where
+module Data.Ladder.Matchup ( Matchup ) where
 
 import           Data.UUID (UUID)
 
