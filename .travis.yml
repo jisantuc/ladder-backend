@@ -1,49 +1,32 @@
-# This is the simple Travis configuration, which is intended for use
-# on applications which do not require cross-platform and
-# multiple-GHC-version support. For more information and other
-# options, see:
-#
-# https://docs.haskellstack.org/en/stable/travis_ci/
-#
-# Copy these contents into the root directory of your Github project in a file
-# named .travis.yml
-
-# Use new container infrastructure to enable caching
 sudo: false
-
-# Do not choose a language; we provide our own build tools.
 language: generic
-
-# Caching so the next build will be fast too.
 cache:
   directories:
-  - $HOME/.stack
-
-# Ensure necessary system libraries are present
+  - "$HOME/.stack"
 addons:
   apt:
     packages:
-      - libgmp-dev
-      - libpq-dev
-
+    - libgmp-dev
+    - libpq-dev
 before_install:
-  # Download and unpack the stack executable
-  - mkdir -p ~/.local/bin
-  - export PATH=$HOME/.local/bin:$PATH
-  - travis_retry curl -L https://get.haskellstack.org/stable/linux-x86_64.tar.gz | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
-
+- mkdir -p ~/.local/bin
+- export PATH=$HOME/.local/bin:$PATH
+- travis_retry curl -L https://get.haskellstack.org/stable/linux-x86_64.tar.gz | tar
+  xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
 install:
-  # Build dependencies
-  - stack --no-terminal --install-ghc test --only-dependencies
-  - wget -O rambler https://github.com/elwinar/rambler/releases/download/4.2.0/rambler-linux-amd64 && chmod +x rambler
-
+- stack --no-terminal --install-ghc test --only-dependencies
+- wget -O rambler https://github.com/elwinar/rambler/releases/download/4.2.0/rambler-linux-amd64
+  && chmod +x rambler
 before_script:
-  - ./scripts/dbinit
-  - ./rambler apply
-
+- aws s3 cp s3://ladder-billiards-test-config-us-east-1/rambler.json .
+- "./scripts/dbinit"
+- "./rambler apply"
 script:
-  # Build the package, its tests, and its docs and run the tests
-  - stack --no-terminal test --haddock --no-haddock-deps
-
+- stack --no-terminal test --haddock --no-haddock-deps
 after_script:
-  - ./rambler reverse -a
+- "./rambler reverse -a"
+env:
+  global:
+  - secure: m6UrZWxIcOa0q9yuWAeq9g5yS7+Gx9g86SFHAxaohTIyIsFpiP+PgnA5eIyLY6I+wSv+5EJBHDHXz4l6rjTbHXbsIF7D/RukCSisHN8CgWkW13THMs2E6+rsNHrGK7WDRe+rVVS/Ac14+22Dg7VR8wLRED2DW/YEGY22jO53gi+S7ncx84KXKbv3kscmQpGWQqEUz/UqooLHi51uwbx+m5na/bk5qnCX/IXZxEIVL97Aacy1fEg9r4nBZuD39nZiExgC2Y0R+v7kW4fTx2UkSHjWpGiEHOLCtfzrWIoEp0lyjVtwCfiHYkLkAcHj7oLWYLbKvSDdW3AlLRNIYlL/0rMC7p6Cn4icQqWrTHtYrcc1vb2vRT5zmYww5yxlSVXJPx/ntlDIo8sRDQoQDHhSCobtlHZft7Nm//9ZaiPBSBXVRR2JHxvK/IaKefTxDzjceMKHYYJZzkHxHAW9szfrdqKIRDsZ2j0IzjH+gnBcB8hrwjDLZPqyz8PH71HCpvSc42xeXYzQ6Xozdc6lDSPal0y+EPejmvRyifwyluPfvRh/cYnv45D73qIz0hmuRe8dCjBJqrXlGLYz5c7zluwopDIYg3FBIMx+RV6WBLHcZfpdok3uLeVLO4+3uYQSBAiiG77DCr5pN9LeQfxfCephnTJVGJh1p72wWRv0jVY/8rg=
+  - secure: UDdsNPTLvSYCwXITyshNoXnqY4kP+Wdcdii3ug2VOmBTvqwT9GJb7qFg7u+/YwxqLpWWfLEk1WOZLpd0GW2tmwEzXRbvoFrGSHIEK+bNmqTYQQ3UCMXhFroF7Z/gf4imdFDPNAJIjrPE6eMbyX6lPENrLRRiPUMy6mvSgWMhWh1ErN15++u1Mu16sFUoz6VsCkuqfTDugZTmpkvSelKiV3UOCsMMcW70rR2CK0bi8mseYr35qQStFqNvjV5srsxMF3bz+wSCK46ds/TiCXWfa6js7seEqewhn586jN+usOKVD3byDXI/aqntQg1FuXrNg6dbMJU91WVvh68NJXywGx50LEKYyqr++vchNIO1w39W6EUHAlfiow7K0pVA2hZjhP7lcjg8QdBCGNmUNGAvewQNigYNEli8l4NbndqOO9U43ljEHIghaBTRtWFioBhhkVyyT63XwjcHUuM9B6TDofD8E5t77PuTXULpwsc3+hDNRVXDyn73bcjJ7ElY4zyE2Xn8LNlBlIMJq6vU/0cYafxQ5QKtOVzgHpHLe35eaxAJErMtgX4DJH1rIxtMcsskgJhGSmg1Y3XcBj39bwdsnR4tUrBk+To8qwJcQUghwQu48ycmswfmXkIvJgfirC6N7yoE67hWcTcZCuNd78E4pCwVNKPY68u3fRcL4nS9z/s=
+  - secure: mSax64TxUrDwjOjmRuv3xyjLsjEBLfET8UUVh519ZAMhgSxUHlmrxIsN9cGMDXeBrDwB+rQzmVr33WcFLWI20vMB8EWaUKYkcYLXONYaDjOwhA8Pu6S3yx7RFFC8K6sx5A8JeDKP3g2Dh78pP3Q+xFKsLsghYaksGpq6ENrteLjrqgFrTz5V1kgMCGGZGL3wFC7KZvjUkTIYiWITVJEOpGvyQkJ7k1SoWcEB0RyfLP/0ZrfChVuPVagjxn6R3eh0C+0fRVudB8doG0d/XiUM7qLR6+fIxJenHm13If3RBALlffR5ofsIpDYV6CcMXnZr012NoKKZlki3YqxkcXyOxHw/2Me9sluwyPs0yXdTSlCqNMNVL8nMuTUoWjBzWgRMqNgAVQwK5xgGDBNjocJoJ9kpoFn5s4NOSXVWrQ8apbVO9NCZn54pw6s1Bym09URRsiSz2YzipYXnpK9604mwI1OLcBnYKpoWIigb+iJLdZXzYwT2uQFawSsENCBRhB8fx3z/4VQwviv99mDJeqv0EzsdxHVrjPJ/JxrLjnWshHyNnEC5EuhLlwVa1jxaSEaqObjuuqkqANrlkGk1/J4a6LX8XGljrVokz/5ghjdKxTxJkxtYwzYFmPYhCAodmXc2axQXa5yeUBkwdxka5uuUrv4Tn915CqpaZVl9DUM/UhY=
