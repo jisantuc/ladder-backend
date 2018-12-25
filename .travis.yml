@@ -35,7 +35,7 @@ before_install:
 install:
   # Build dependencies
   - stack --no-terminal --install-ghc test --only-dependencies
-  - wget https://github.com/elwinar/rambler/releases/download/4.2.0/rambler-linux-amd64 -o rambler && chmod +x rambler
+  - wget -O rambler https://github.com/elwinar/rambler/releases/download/4.2.0/rambler-linux-amd64 && chmod +x rambler
 
 before_script:
   - ./scripts/dbinit
