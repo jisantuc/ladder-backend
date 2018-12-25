@@ -1,10 +1,12 @@
 module Main (main) where
 
 import           Data.Int                         (Int64)
+import           Data.Ladder.Player
 import           Data.Ladder.Season
 import           Data.Ladder.Time
 import qualified Data.UUID.V4                     as UUIDv4
 import qualified Database.Ladder                  as Database
+import           Database.Ladder.Player
 import           Database.Ladder.Season
 import qualified Database.PostgreSQL.Simple       as Postgres
 import           Database.PostgreSQL.Simple.SqlQQ
@@ -21,7 +23,6 @@ main :: IO ()
 main = do
   hspec pureSpec
   dbSpec
-  (\_ -> ()) <$> truncateTables
 
 pureSpec :: Spec
 pureSpec = do
@@ -48,8 +49,12 @@ pureSpec = do
     it "should think higher ranked players are more likely to win by a given margin" $ do
       matchSeqLikelihood 3 1100 1000 `shouldSatisfy` (\x -> x < matchSeqLikelihood 3 1200 1000)
 
-dbSpec :: Assertion
 dbSpec = do
+  seasonDBSpec
+  playerDBSpec
+
+seasonDBSpec :: Assertion
+seasonDBSpec = do
   handle <- defaultHandle
   season <- (\seasonID -> Season seasonID 2019 Summer) <$> UUIDv4.nextRandom
   created <- createSeason handle season
@@ -57,7 +62,17 @@ dbSpec = do
   assertEqual "return from created should match return from latest" created listed
   assertEqual "return from created should be the same as source season" created [season]
 
-truncateTables :: IO Int64
-truncateTables = do
+playerDBSpec :: Assertion
+playerDBSpec = do
   handle <- defaultHandle
-  Postgres.execute_ (Database.conn handle) [sql|TRUNCATE TABLE seasons CASCADE;|]
+  player <- (\playerID -> Player playerID "foo@bogus.com" "Bogus" "Name" True) <$> UUIDv4.nextRandom
+  inserted <- createPlayer handle player
+  retrieved <- getPlayer handle (playerID player)
+  assertEqual "return from fetch is the same as return from insert" inserted retrieved
+  assertEqual "return from insert is the player we inserted" inserted [player]
+  _ <- updatePlayer handle (player { email = "bar@bogus.net" })
+  fetchedAgain <- getPlayer handle (playerID player)
+  assertEqual "the email was updated" (email <$> fetchedAgain) ["bar@bogus.net"]
+  _ <- deletePlayer handle player
+  fetchedAThirdTime <- getPlayer handle (playerID player)
+  assertEqual "the player is gone from the db" fetchedAThirdTime []

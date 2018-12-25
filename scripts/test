@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e
-
 function usage() {
   echo -n \
        "Usage: $(basename "$0")
@@ -18,7 +16,10 @@ then
     else
         export PATH="$(pwd)":"$PATH"
         rambler -c rambler.json.test apply
+        # test result stored instead of set -e for error-handling "finally"-like execution
         stack --no-terminal test --haddock --no-haddock-deps
+        testResult="$?"
         rambler -c rambler.json.test reverse -a
+        exit "$testResult"
     fi
 fi
