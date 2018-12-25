@@ -1,10 +1,30 @@
-language: haskell
-ghc:
-  - "8.6.3"
-  
+# This is the simple Travis configuration, which is intended for use
+# on applications which do not require cross-platform and
+# multiple-GHC-version support. For more information and other
+# options, see:
+#
+# https://docs.haskellstack.org/en/stable/travis_ci/
+#
+# Copy these contents into the root directory of your Github project in a file
+# named .travis.yml
+
+# Use new container infrastructure to enable caching
+sudo: false
+
+# Do not choose a language; we provide our own build tools.
+language: generic
+
+# Caching so the next build will be fast too.
 cache:
   directories:
-    - $HOME/.stack
+  - $HOME/.stack
+
+# Ensure necessary system libraries are present
+addons:
+  apt:
+    packages:
+      - libgmp-dev
+      - libpq-dev
 
 before_install:
   # Download and unpack the stack executable
@@ -12,14 +32,10 @@ before_install:
   - export PATH=$HOME/.local/bin:$PATH
   - travis_retry curl -L https://get.haskellstack.org/stable/linux-x86_64.tar.gz | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
 
-before_cache:
-  - rm -fv $HOME/.cabal/packages/hackage.haskell.org/build-reports.log
-  - rm -fv $HOME/.cabal/packages/hackage.haskell.org/00-index.*
-  - rm -fv $HOME/.cabal/packages/hackage.haskell.org/*.json
-  - rm -fv $HOME/.cabal/packages/hackage.haskell.org/01-index.cache
-  - rm -fv $HOME/.cabal/packages/hackage.haskell.org/01-index.tar
-  - rm -fv $HOME/.cabal/packages/hackage.haskell.org/01-index.tar.idx
-  - rm -rfv $HOME/.cabal/packages/head.hackage
+install:
+  # Build dependencies
+  - stack --no-terminal --install-ghc test --only-dependencies
 
 script:
-  - stack --no-terminal --skip-ghc-check test
+  # Build the package, its tests, and its docs and run the tests
+  - stack --no-terminal test --haddock --no-haddock-deps
