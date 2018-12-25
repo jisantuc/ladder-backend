@@ -1,0 +1,28 @@
+#!/bin/bash
+
+set -e
+
+function usage() {
+  echo -n \
+       "Usage: $(basename "$0")
+
+Initiailize the database with the correct db name and user
+"
+}
+
+if [ "${BASH_SOURCE[0]}" = "${0}" ]
+then
+    if [ "${1:-}" = "--help" ]
+    then
+        usage
+    else
+        postgres_db=${POSTGRES_DATABASE:-ladder}
+        postgres_user=${POSTGRES_USER:-ladder}
+        postgres_password=${POSTGRES_PASSWORD:-ladder}
+        dbCmd="create database $postgres_db;"
+        userCmd="create user $postgres_user password $postgres_password;"
+        psql -c "$dbCmd" -U postgres || true
+        psql -c "$userCmd" -U postgres || true
+    fi
+fi
+
