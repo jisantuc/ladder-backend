@@ -21,12 +21,9 @@ install:
 - pip install --user awscli
 before_script:
 - aws s3 cp s3://ladder-billiards-test-config-us-east-1/rambler.json .
-- "./scripts/dbinit"
-- "./rambler apply"
+- "./scripts/dbinit --test"
 script:
-- stack --no-terminal test --haddock --no-haddock-deps
-after_script:
-- "./rambler reverse -a"
+- ./scripts/test
 env:
   global:
   - secure: QvYuHH4+/+xwhWhPKz5iUrpACd+V3yiCBQ5WSGrDoxoTpuQxeJfsdF3PQPnAVJCjC66UTzyzM+hz5gD+Xl8Z16ppZCVe2kYYUAHew5qFEyOKjQns8VgjM42E3MXtt97oo4X46H/2YKiUzCwSyRcKDXuHfjQ58gS77mfiApVtyM/yJMBAtJ5fktAXiwmRWRDmk1AGSXRg2wtrzuhLVEITb18Z2lyeg6BIXDc7CY5KmHUiRZGgrjYNwxFcfrMdrkvYoKRTxfl5xOiY+AGHPBs7X+6y7B+Vwo2hT/8Htgl0OuakLOR8PG4bL3Uk29zzMyRoPBxIaR5FILN8/sLoVjoAd7V2T3PZ65/hKetJp4HYHf6gGFlBDzIR6fVspBND1wblnKIxWRTSG8NM3dpawhkeH7Li7cEuDBnoNZusqkSF+QXGI/JxCUP+jKRL3SrH2NUJTaVYu0qT5d3pIqyLi+FHyiYYrF00M4Go5KzC8XR57WyQI6tXNecT2FClrCXYYLtz6YDB4gB6/658HPlQOw35ZsRJkCTTgAMupiDK/cuifJvKvd2WCdgqhiT8Klh3mgRoUXrJf4xXuxbn7n/CDXEIs5sRXhxMACvZ3Ls6DzTcR+Gll4D+rxRNunaDYDXqsu346/WHZH5qHuGgkE+VePjzQimuIC73Apx7dKDqWJqT/JM=

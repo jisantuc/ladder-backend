@@ -1,17 +1,30 @@
 module Main (main) where
 
-import           Rating     ( eloUpdateWithConstant
-                            , matchSeqWinProbability
-                            , matchSeqLikelihood
-                            , validateMatchup
-                            , race)
+import           Data.Int                         (Int64)
+import           Data.Ladder.Season
+import           Data.Ladder.Time
+import qualified Data.UUID.V4                     as UUIDv4
+import qualified Database.Ladder                  as Database
+import           Database.Ladder.Season
+import qualified Database.PostgreSQL.Simple       as Postgres
+import           Database.PostgreSQL.Simple.SqlQQ
+import           Rating                           (eloUpdateWithConstant,
+                                                   matchSeqLikelihood,
+                                                   matchSeqWinProbability, race,
+                                                   validateMatchup)
 import           Test.Hspec
+import           Test.HUnit
+
+import           Config
 
 main :: IO ()
-main = hspec spec
+main = do
+  hspec pureSpec
+  dbSpec
+  (\_ -> ()) <$> truncateTables
 
-spec :: Spec
-spec = do
+pureSpec :: Spec
+pureSpec = do
   describe "Match sequence likelihood calculations" $ do
     it "should think players with equal odds are equally likely to win" $ do
       round (matchSeqWinProbability 10000 5000 0.5 * 100) `shouldBe` 50
@@ -34,3 +47,17 @@ spec = do
       matchSeqLikelihood (race - 1) 1100 1000 `shouldSatisfy` (\x -> x > matchSeqLikelihood (race - 1) 1000 1100)
     it "should think higher ranked players are more likely to win by a given margin" $ do
       matchSeqLikelihood 3 1100 1000 `shouldSatisfy` (\x -> x < matchSeqLikelihood 3 1200 1000)
+
+dbSpec :: Assertion
+dbSpec = do
+  handle <- defaultHandle
+  season <- (\seasonID -> Season seasonID 2019 Summer) <$> UUIDv4.nextRandom
+  created <- createSeason handle season
+  listed <- getCurrentSeason handle
+  assertEqual "return from created should match return from latest" created listed
+  assertEqual "return from created should be the same as source season" created [season]
+
+truncateTables :: IO Int64
+truncateTables = do
+  handle <- defaultHandle
+  Postgres.execute_ (Database.conn handle) [sql|TRUNCATE TABLE seasons CASCADE;|]

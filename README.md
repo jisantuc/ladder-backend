@@ -1,5 +1,7 @@
 # ladder
 
+A haskell servant API for a singles pool league where players schedule their own matches and are rated by the Elo algorithm.
+
 ## Developing
 
 You'll need:
