@@ -4,8 +4,13 @@ ghc:
   
 cache:
   directories:
-    - $HOME/.cabal/packages
-    - $HOME/.cabal/store
+    - $HOME/.stack
+
+before_install:
+  # Download and unpack the stack executable
+  - mkdir -p ~/.local/bin
+  - export PATH=$HOME/.local/bin:$PATH
+  - travis_retry curl -L https://get.haskellstack.org/stable/linux-x86_64.tar.gz | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
 
 before_cache:
   - rm -fv $HOME/.cabal/packages/hackage.haskell.org/build-reports.log
@@ -15,3 +20,6 @@ before_cache:
   - rm -fv $HOME/.cabal/packages/hackage.haskell.org/01-index.tar
   - rm -fv $HOME/.cabal/packages/hackage.haskell.org/01-index.tar.idx
   - rm -rfv $HOME/.cabal/packages/head.hackage
+
+script:
+  - stack --no-terminal --skip-ghc-check test
