@@ -20,7 +20,7 @@ install:
   && chmod +x rambler
 - pip install --user awscli
 before_script:
-- aws s3 cp s3://ladder-billiards-test-config-us-east-1/rambler.json .
+- aws s3 cp s3://ladder-billiards-test-config-us-east-1/rambler.json rambler.json.test
 - "./scripts/dbinit --test"
 script:
 - ./scripts/test
