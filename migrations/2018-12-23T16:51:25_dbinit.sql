@@ -21,8 +21,8 @@ CREATE TABLE venues (
   name varchar(255) not null,
   phone varchar(10) not null,
   address varchar(255) not null,
-  leage_nights day_of_week[] not null,
-  cost money
+  league_nights day_of_week[] not null,
+  cost float
 );
 
 CREATE TABLE players (

@@ -24,6 +24,7 @@ library
                      , Database.Ladder
                      , Database.Ladder.Player
                      , Database.Ladder.Season
+                     , Database.Ladder.Venue
                      , Error
                      , Rating
   build-depends:       base >= 4.7 && < 5

@@ -1,4 +1,4 @@
-module Data.Ladder.Player ( Player (..), toUpdate ) where
+module Data.Ladder.Player ( Player (..), playerToUpdate ) where
 
 import           Data.UUID                          (UUID)
 import qualified Database.PostgreSQL.Simple.FromRow as Postgres

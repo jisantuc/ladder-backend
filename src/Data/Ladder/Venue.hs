@@ -1,4 +1,4 @@
-module Data.Ladder.Venue (Venue (..)) where
+module Data.Ladder.Venue (Venue (..), venueToUpdate) where
 
 import qualified Data.Ladder.Time                   as Time
 import           Data.UUID                          (UUID)
@@ -10,6 +10,7 @@ import           GHC.Generics                       (Generic)
 data Venue = Venue { venueID      :: UUID
                    , name         :: String
                    , phone        :: String
+                   , address      :: String
                    , leagueNights :: Postgres.PGArray Time.DayOfWeek
                    , cost         :: Maybe Double } deriving (Eq, Show, Generic)
 
@@ -18,6 +19,7 @@ instance Postgres.FromRow Venue
 
 data VenueUpdate = VenueUpdate { _name :: String
                                , _phone :: String
+                               , _address :: String
                                , _leagueNights :: Postgres.PGArray Time.DayOfWeek
                                , _cost :: Maybe Double
                                , _venueID :: UUID } deriving (Eq, Show, Generic)
@@ -27,6 +29,7 @@ instance Postgres.ToRow VenueUpdate
 venueToUpdate :: Venue -> VenueUpdate
 venueToUpdate venue = VenueUpdate { _name = name venue
                                   , _phone = phone venue
+                                  , _address = address venue
                                   , _leagueNights = leagueNights venue
                                   , _cost = cost venue
                                   , _venueID = venueID venue }

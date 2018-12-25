@@ -1,7 +1,7 @@
-module Data.Ladder.Time ( DayOfWeek
-                 , Session(..)
-                 , SqlTime(..)
-                 , now ) where
+module Data.Ladder.Time ( DayOfWeek (..)
+                        , Session(..)
+                        , SqlTime(..)
+                        , now ) where
 
 import qualified Data.ByteString.Char8                as B
 import           Data.Time.Clock                      (getCurrentTime)
@@ -22,14 +22,14 @@ data DayOfWeek = Monday
   | Sunday deriving (Eq, Show)
 
 dowFromString :: String -> DayOfWeek
-dowFromString "Monday" = Monday
-dowFromString "Tuesday" = Tuesday
+dowFromString "Monday"    = Monday
+dowFromString "Tuesday"   = Tuesday
 dowFromString "Wednesday" = Wednesday
-dowFromString "Thursday" = Thursday
-dowFromString "Friday" = Friday
-dowFromString "Saturday" = Saturday
-dowFromString "Sunday" = Sunday
-dowFromString s = error $ "Not a valid day of week: " ++ s
+dowFromString "Thursday"  = Thursday
+dowFromString "Friday"    = Friday
+dowFromString "Saturday"  = Saturday
+dowFromString "Sunday"    = Sunday
+dowFromString s           = error $ "Not a valid day of week: " ++ s
 
 instance Postgres.ToField DayOfWeek where
   toField dow = Postgres.Escape . B.pack $ show dow
@@ -48,8 +48,8 @@ data Session = Spring
 sessFromString :: String -> Session
 sessFromString "Spring" = Spring
 sessFromString "Summer" = Summer
-sessFromString "Fall" = Fall
-sessFromString s = error $ "Not a valid session: " ++ s
+sessFromString "Fall"   = Fall
+sessFromString s        = error $ "Not a valid session: " ++ s
 
 instance Postgres.ToField Session where
   toField sess = Postgres.Escape . B.pack $ show sess
