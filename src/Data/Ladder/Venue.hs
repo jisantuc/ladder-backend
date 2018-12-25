@@ -1,4 +1,4 @@
-module Data.Ladder.Venue (Venue) where
+module Data.Ladder.Venue (Venue (..)) where
 
 import qualified Data.Ladder.Time                 as Time
 import           Data.UUID                        (UUID)
