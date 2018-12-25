@@ -39,7 +39,7 @@ install:
 
 before_script:
   - ./scripts/dbinit
-  - rambler apply
+  - ./rambler apply
 
 script:
   # Build the package, its tests, and its docs and run the tests
