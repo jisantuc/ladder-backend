@@ -17,6 +17,7 @@ install:
 - stack --no-terminal --install-ghc test --only-dependencies
 - wget -O rambler https://github.com/elwinar/rambler/releases/download/4.2.0/rambler-linux-amd64
   && chmod +x rambler
+- pip install --user awscli
 before_script:
 - aws s3 cp s3://ladder-billiards-test-config-us-east-1/rambler.json .
 - "./scripts/dbinit"
