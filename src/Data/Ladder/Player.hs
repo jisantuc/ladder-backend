@@ -27,8 +27,8 @@ data PlayerUpdate = PlayerUpdate { _email     :: String
 
 instance Postgres.ToRow PlayerUpdate
 
-toUpdate :: Player -> PlayerUpdate
-toUpdate player = PlayerUpdate { _email = email player
+playerToUpdate :: Player -> PlayerUpdate
+playerToUpdate player = PlayerUpdate { _email = email player
                                , _first = firstName player
                                , _last = lastName player
                                , _accepting = acceptingMatches player
