@@ -1,7 +1,7 @@
-module Data.Season () where
+module Data.Ladder.Season () where
 
-import qualified Data.Time as Time
-import           Data.UUID (UUID)
+import qualified Data.Ladder.Time as Time
+import           Data.UUID        (UUID)
 
 data Season = Season { seasonId :: UUID
                      , year     :: Int

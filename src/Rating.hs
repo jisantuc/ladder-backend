@@ -6,7 +6,6 @@ module Rating ( eloUpdate
               , race
               , validateMatchup ) where
 
-import           Data.Matchup                     (Matchup)
 import           Debug.Trace
 import           Error                            (Message (..))
 import           Statistics.Distribution          (cumulative, probability)

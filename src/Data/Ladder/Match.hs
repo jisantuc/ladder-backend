@@ -1,7 +1,7 @@
-module Data.Match ( Match ) where
+module Data.Ladder.Match ( Match ) where
 
-import qualified Data.Time as Time
-import           Data.UUID (UUID)
+import qualified Data.Ladder.Time as Time
+import           Data.UUID        (UUID)
 
 data Match = Match { matchID     :: UUID
                    , matchup     :: UUID

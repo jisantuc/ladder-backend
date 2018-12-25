@@ -15,12 +15,12 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Data.Match
-                     , Data.Matchup
-                     , Data.Player
-                     , Data.Season
-                     , Data.Time
-                     , Data.Venue
+  exposed-modules:     Data.Ladder.Match
+                     , Data.Ladder.Matchup
+                     , Data.Ladder.Player
+                     , Data.Ladder.Season
+                     , Data.Ladder.Time
+                     , Data.Ladder.Venue
                      , Error
                      , Rating
   build-depends:       base >= 4.7 && < 5

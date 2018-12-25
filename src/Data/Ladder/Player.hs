@@ -1,4 +1,4 @@
-module Data.Player ( Player ) where
+module Data.Ladder.Player ( Player ) where
 
 import           Data.UUID (UUID)
 

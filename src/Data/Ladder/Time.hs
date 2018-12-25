@@ -1,4 +1,4 @@
-module Data.Time ( DayOfWeek
+module Data.Ladder.Time ( DayOfWeek
                  , Session
                  , SqlTime(..)
                  , now ) where
