@@ -4,6 +4,8 @@ language: generic
 cache:
   directories:
   - "$HOME/.stack"
+services:
+  - postgresql
 addons:
   apt:
     packages:
