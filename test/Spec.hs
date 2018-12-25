@@ -1,12 +1,14 @@
 module Main (main) where
 
 import           Data.Int                         (Int64)
+import           Data.Ladder.Matchup
 import           Data.Ladder.Player
 import           Data.Ladder.Season
 import           Data.Ladder.Time
 import           Data.Ladder.Venue
 import qualified Data.UUID.V4                     as UUIDv4
 import qualified Database.Ladder                  as Database
+import           Database.Ladder.Matchup
 import           Database.Ladder.Player
 import           Database.Ladder.Season
 import           Database.Ladder.Venue
@@ -57,6 +59,7 @@ dbSpec = do
   seasonDBSpec
   playerDBSpec
   venueDBSpec
+  matchupDBSpec
 
 seasonDBSpec :: Assertion
 seasonDBSpec = do
@@ -105,3 +108,41 @@ venueDBSpec = do
   _ <- deleteVenue handle venue
   listedAgain <- listVenues handle
   assertEqual "the venue is gone from the db" listedAgain []
+
+matchupDBSpec :: Assertion
+matchupDBSpec = do
+  handle <- defaultHandle
+  currTime <- now
+  player1 <- (\playerID -> Player playerID "foo@bogus.com" "Bogus" "Name" True) <$> UUIDv4.nextRandom
+  player2 <- (\playerID -> Player playerID "bar@absurd.com" "Bogus" "Name" True) <$> UUIDv4.nextRandom
+  season <- (\seasonID -> Season seasonID 2019 Summer) <$> UUIDv4.nextRandom
+  matchup <- (\matchupID ->
+                Matchup matchupID (playerID player1) (playerID player2) 4 (seasonID season) Nothing Nothing) <$>
+             UUIDv4.nextRandom
+  venue <- (\venueID ->
+              Venue venueID
+              "Quite Good and Fun Pool Hall"
+              "2670001234"
+              "Somewhere in Center City, Philadelphia, PA"
+              (Postgres.PGArray [Monday, Tuesday])
+              (Just 10.75)) <$> UUIDv4.nextRandom
+  _ <- createSeason handle season
+  _ <- createPlayer handle player1
+  _ <- createPlayer handle player2
+  _ <- createVenue handle venue
+  inserted <- createMatchup handle matchup
+  retrieved <- getMatchup handle (matchupID matchup)
+  assertEqual "return from fetch is the same as return from insert" inserted retrieved
+  assertEqual "return from insert is the matchup we inserted" inserted [matchup]
+  _ <- scheduleMatchup handle (matchup { date = Just currTime })
+  fetchedAgain <- getMatchup handle (matchupID matchup)
+  assertEqual "updating just the date shouldn't have changed anything" fetchedAgain [matchup]
+  _ <- scheduleMatchup handle (matchup { date = Just currTime, venue = Just (venueID venue) })
+  fetchedAThirdTime <- getMatchup handle (matchupID matchup)
+  assertEqual "updating both date and venue should have set both" fetchedAThirdTime $
+    matchup { date = Just currTime, venue = Just (venueID venue) }
+  _ <- Postgres.execute (Database.conn handle) $
+    [sql|UPDATE matchups SET ]
+  _ <- deleteMatchup handle matchup
+  fetchedAThirdTime <- getMatchup handle (matchupID matchup)
+  assertEqual "the matchup is gone from the db" fetchedAThirdTime []

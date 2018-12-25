@@ -5,8 +5,7 @@ import           Data.UUID        (UUID)
 
 data Match = Match { matchID     :: UUID
                    , matchup     :: UUID
-                   , venue       :: UUID
-                   , date        :: Time.SqlTime
+                   , startTime   :: Time.SqlTime
                    , recorded    :: Time.SqlTime
                    , player1Wins :: Int
                    , player2Wins :: Int }
