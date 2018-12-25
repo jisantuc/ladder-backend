@@ -22,6 +22,7 @@ library
                      , Data.Ladder.Time
                      , Data.Ladder.Venue
                      , Database.Ladder
+                     , Database.Ladder.Matchup
                      , Database.Ladder.Player
                      , Database.Ladder.Season
                      , Database.Ladder.Venue
@@ -60,6 +61,7 @@ test-suite ladder-test
                      , HUnit
                      , bytestring >= 0.10.8.2 && < 0.11
                      , postgresql-simple >= 0.5.4.0 && < 0.6
+                     , time >= 1.8.0.2 && < 1.9
                      , uuid >= 1.3.13 && < 1.4
   other-modules:       Config
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
