@@ -20,7 +20,7 @@ then
         postgres_user=${POSTGRES_USER:-ladder}
         postgres_password=${POSTGRES_PASSWORD:-ladder}
         dbCmd="create database $postgres_db;"
-        userCmd="create user $postgres_user password $postgres_password;"
+        userCmd="create user $postgres_user password '$postgres_password';"
         psql -c "$dbCmd" -U postgres || true
         psql -c "$userCmd" -U postgres || true
     fi
