@@ -4,12 +4,15 @@ import           Data.Int                         (Int64)
 import           Data.Ladder.Player
 import           Data.Ladder.Season
 import           Data.Ladder.Time
+import           Data.Ladder.Venue
 import qualified Data.UUID.V4                     as UUIDv4
 import qualified Database.Ladder                  as Database
 import           Database.Ladder.Player
 import           Database.Ladder.Season
+import           Database.Ladder.Venue
 import qualified Database.PostgreSQL.Simple       as Postgres
 import           Database.PostgreSQL.Simple.SqlQQ
+import qualified Database.PostgreSQL.Simple.Types as Postgres
 import           Rating                           (eloUpdateWithConstant,
                                                    matchSeqLikelihood,
                                                    matchSeqWinProbability, race,
@@ -49,9 +52,11 @@ pureSpec = do
     it "should think higher ranked players are more likely to win by a given margin" $ do
       matchSeqLikelihood 3 1100 1000 `shouldSatisfy` (\x -> x < matchSeqLikelihood 3 1200 1000)
 
+dbSpec :: IO ()
 dbSpec = do
   seasonDBSpec
   playerDBSpec
+  venueDBSpec
 
 seasonDBSpec :: Assertion
 seasonDBSpec = do
@@ -76,3 +81,27 @@ playerDBSpec = do
   _ <- deletePlayer handle player
   fetchedAThirdTime <- getPlayer handle (playerID player)
   assertEqual "the player is gone from the db" fetchedAThirdTime []
+
+venueDBSpec :: Assertion
+venueDBSpec = do
+  handle <- defaultHandle
+  venue <- (\venueID ->
+              Venue venueID
+              "Quite Good and Fun Pool Hall"
+              "2670001234"
+              "Somewhere in Center City, Philadelphia, PA"
+              (Postgres.PGArray [Monday, Tuesday])
+              (Just 10.75)) <$> UUIDv4.nextRandom
+  inserted <- createVenue handle venue
+  retrieved <- getVenue handle (venueID venue)
+  assertEqual "return from fetch is the same as return from insert" inserted retrieved
+  assertEqual "return from insert is the player we inserted" inserted [venue]
+  _ <- updateVenue handle (venue { name = "Actually Not a Fun Place", leagueNights = Postgres.PGArray [] })
+  fetchedAgain <- getVenue handle (venueID venue)
+  assertEqual "update should have done something" fetchedAgain $
+    [venue { name = "Actually Not a Fun Place", leagueNights = Postgres.PGArray []}]
+  listed <- listVenues handle
+  assertEqual "list should get the only venue we've created" listed fetchedAgain
+  _ <- deleteVenue handle venue
+  listedAgain <- listVenues handle
+  assertEqual "the venue is gone from the db" listedAgain []

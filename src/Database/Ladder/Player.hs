@@ -4,12 +4,12 @@ module Database.Ladder.Player ( getPlayer
                               , deletePlayer
                               , listPlayers ) where
 
-import           Data.Int           (Int64)
+import           Data.Int                         (Int64)
 import           Data.Ladder.Player
-import           Data.UUID          (UUID)
-import qualified Database.Ladder    as Database
+import           Data.UUID                        (UUID)
+import qualified Database.Ladder                  as Database
 import qualified Database.PostgreSQL.Simple       as Postgres
-import Database.PostgreSQL.Simple.SqlQQ
+import           Database.PostgreSQL.Simple.SqlQQ
 
 getPlayer :: Database.Handle -> UUID -> IO [Player]
 getPlayer handle playerID =
@@ -36,7 +36,7 @@ updatePlayer handle player =
                       SET email = ?, first_name = ?, last_name = ?, accepting_matches = ?
                       WHERE id = ?;|]
   in
-    Postgres.execute (Database.conn handle) updateQuery (toUpdate player)
+    Postgres.execute (Database.conn handle) updateQuery (playerToUpdate player)
 
 deletePlayer :: Database.Handle -> Player -> IO Int64
 deletePlayer handle player =
