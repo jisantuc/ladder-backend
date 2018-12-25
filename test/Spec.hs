@@ -26,10 +26,10 @@ spec = do
     it "should think even matches are even" $ do
       matchSeqLikelihood (race - 1) 1000 1000 `shouldSatisfy` (\x -> abs (x - 0.5) < 0.000001)
     it "should think mostly even matches are also pretty even" $ do
-      matchSeqLikelihood (race - 1) 1001 1000 `shouldSatisfy` (\x -> abs (x - 0.5) > 0.05)
-      matchSeqLikelihood (race - 1) 1000 1001 `shouldSatisfy` (\x -> abs (x - 0.5) > 0.05)
-      matchSeqLikelihood (race - 1) 1010 1000 `shouldSatisfy` (\x -> abs (x - 0.5) > 0.05)
-      matchSeqLikelihood (race - 1) 1000 1010 `shouldSatisfy` (\x -> abs (x - 0.5) > 0.05)
+      matchSeqLikelihood (race - 1) 1001 1000 `shouldSatisfy` (\x -> abs (x - 0.5) < 0.05)
+      matchSeqLikelihood (race - 1) 1000 1001 `shouldSatisfy` (\x -> abs (x - 0.5) < 0.05)
+      matchSeqLikelihood (race - 1) 1010 1000 `shouldSatisfy` (\x -> abs (x - 0.5) < 0.05)
+      matchSeqLikelihood (race - 1) 1000 1010 `shouldSatisfy` (\x -> abs (x - 0.5) < 0.05)
     it "should think unbalanced matchups are unbalanced" $ do
       matchSeqLikelihood (race - 1) 1100 1000 `shouldSatisfy` (\x -> x > matchSeqLikelihood (race - 1) 1000 1100)
     it "should think higher ranked players are more likely to win by a given margin" $ do
