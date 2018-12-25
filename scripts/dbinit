@@ -19,10 +19,12 @@ then
         postgres_db=${POSTGRES_DATABASE:-ladder}
         postgres_user=${POSTGRES_USER:-ladder}
         postgres_password=${POSTGRES_PASSWORD:-ladder}
+        postgres_port=${POSTGRES_PORT:-5432}
+        postgres_host=${POSTGRES_HOST:-localhost}
         dbCmd="create database $postgres_db;"
         userCmd="create user $postgres_user password '$postgres_password';"
-        psql -c "$dbCmd" -U postgres || true
-        psql -c "$userCmd" -U postgres || true
+        psql -c "$dbCmd" -U postgres -p "$postgres_port" -h "$postgres_host" || true
+        psql -c "$userCmd" -U postgres -p "$postgres_port" -h "postgres_host" || true
     fi
 fi
 
