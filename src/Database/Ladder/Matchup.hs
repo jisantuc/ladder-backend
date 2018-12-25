@@ -6,7 +6,7 @@ module Database.Ladder.Matchup ( getMatchup
 
 import           Data.Int                         (Int64)
 import           Data.Ladder.Matchup
-import qualified Data.Ladder.Time as Time
+import qualified Data.Ladder.Time                 as Time
 import           Data.UUID                        (UUID)
 import qualified Database.Ladder                  as Database
 import qualified Database.PostgreSQL.Simple       as Postgres
@@ -37,7 +37,7 @@ scheduleMatchup handle matchup =
   in
     case (venue matchup, date matchup) of
       (Just venueID, Just date) ->
-        Postgres.execute (Database.conn handle) updateQuery (venueID, date)
+        Postgres.execute (Database.conn handle) updateQuery (date, venueID, matchupID matchup)
       _ ->
         pure 0
 
@@ -53,7 +53,7 @@ listMatchupsForPlayer handle playerID =
   let
     listQuery = [sql|SELECT id, player1, player2, week, season, date, venue
                     FROM matchups
-                    WHERE (player1 = ? OR player2 = ?) AND date > now();|]
+                    WHERE (player1 = ? OR player2 = ?) AND (date > now() OR date IS NULL);|]
   in
     Postgres.query (Database.conn handle) listQuery (playerID, playerID)
 

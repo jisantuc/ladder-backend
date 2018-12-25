@@ -1,16 +1,20 @@
 module Data.Ladder.Time ( DayOfWeek (..)
                         , Session(..)
                         , SqlTime(..)
-                        , now ) where
+                        , now
+                        , toUTCTime ) where
 
 import qualified Data.ByteString.Char8                as B
-import           Data.Time.Clock                      (getCurrentTime)
-import           Data.Time.LocalTime                  (utc, utcToLocalTime)
+import           Data.Time.Clock                      (getCurrentTime, UTCTime)
+import           Data.Time.LocalTime                  ( utc
+                                                      , utcToZonedTime
+                                                      , zonedTimeToUTC
+                                                      , zonedTimeToLocalTime
+                                                      , ZonedTime)
 import qualified Database.PostgreSQL.Simple.FromField as Postgres
-import           Database.PostgreSQL.Simple.Time      (LocalTimestamp,
+import           Database.PostgreSQL.Simple.Time      (ZonedTimestamp,
                                                        Unbounded (..),
-                                                       localTimestampToBuilder,
-                                                       parseLocalTimestamp)
+                                                       zonedTimestampToBuilder)
 import qualified Database.PostgreSQL.Simple.ToField   as Postgres
 
 data DayOfWeek = Monday
@@ -61,12 +65,19 @@ instance Postgres.FromField Session where
       Just dat ->
         pure $ sessFromString dat
 
-newtype SqlTime = SqlTime LocalTimestamp deriving (Eq, Show)
+newtype SqlTime = SqlTime ZonedTimestamp deriving (Show)
 
 instance Postgres.ToField SqlTime where
-  toField (SqlTime t) = Postgres.Plain . Postgres.inQuotes . localTimestampToBuilder $ t
+  toField (SqlTime t) = Postgres.Plain . Postgres.inQuotes . zonedTimestampToBuilder $ t
 instance Postgres.FromField SqlTime where
   fromField f v = SqlTime <$> Postgres.fromField f v
+instance Eq SqlTime where
+  (/=) (SqlTime (Finite t1)) (SqlTime (Finite t2)) =
+    zonedTimeToUTC t1 /= zonedTimeToUTC t2
 
 now :: IO SqlTime
-now = SqlTime . Finite <$> (utcToLocalTime utc <$> getCurrentTime)
+now = SqlTime . Finite <$> (utcToZonedTime utc <$> getCurrentTime)
+
+toUTCTime :: SqlTime -> Maybe UTCTime
+toUTCTime (SqlTime (Finite t)) = zonedTimeToUTC <$> Just t
+toUTCTime (SqlTime _) = Nothing
