@@ -1,0 +1,3 @@
+langauge: haskell
+ghc:
+  - "8.6.3"
