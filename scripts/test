@@ -16,6 +16,7 @@ then
     then
         usage
     else
+        export PATH="$(pwd)":"$PATH"
         rambler -c rambler.json.test apply
         stack --no-terminal test --haddock --no-haddock-deps
         rambler -c rambler.json.test reverse -a
