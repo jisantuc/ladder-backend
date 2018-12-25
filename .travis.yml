@@ -46,4 +46,4 @@ script:
   - stack --no-terminal test --haddock --no-haddock-deps
 
 after_script:
-  - rambler reverse -a
+  - ./rambler reverse -a
