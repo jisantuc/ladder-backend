@@ -5,15 +5,14 @@ module Data.Ladder.Time ( DayOfWeek (..)
                         , toUTCTime ) where
 
 import qualified Data.ByteString.Char8                as B
-import           Data.Time.Clock                      (getCurrentTime, UTCTime)
-import           Data.Time.LocalTime                  ( utc
-                                                      , utcToZonedTime
-                                                      , zonedTimeToUTC
-                                                      , zonedTimeToLocalTime
-                                                      , ZonedTime)
+import           Data.Time.Clock                      (UTCTime, getCurrentTime)
+import           Data.Time.LocalTime                  (ZonedTime, utc,
+                                                       utcToZonedTime,
+                                                       zonedTimeToLocalTime,
+                                                       zonedTimeToUTC)
 import qualified Database.PostgreSQL.Simple.FromField as Postgres
-import           Database.PostgreSQL.Simple.Time      (ZonedTimestamp,
-                                                       Unbounded (..),
+import           Database.PostgreSQL.Simple.Time      (Unbounded (..),
+                                                       ZonedTimestamp,
                                                        zonedTimestampToBuilder)
 import qualified Database.PostgreSQL.Simple.ToField   as Postgres
 
@@ -80,4 +79,4 @@ now = SqlTime . Finite <$> (utcToZonedTime utc <$> getCurrentTime)
 
 toUTCTime :: SqlTime -> Maybe UTCTime
 toUTCTime (SqlTime (Finite t)) = zonedTimeToUTC <$> Just t
-toUTCTime (SqlTime _) = Nothing
+toUTCTime (SqlTime _)          = Nothing
