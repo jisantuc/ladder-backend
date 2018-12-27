@@ -30,9 +30,10 @@ createRating handle rating =
 listRecentPlayerRatings :: Database.Handle -> UUID -> Int -> IO [Rating]
 listRecentPlayerRatings handle playerID nRecentWeeks =
   let
-    listQuery = [sql|SELECT id, season, week, rating, player
-                    FROM ratings
-                    ORDER BY season desc, week desc
+    listQuery = [sql|SELECT ratings.id, season, week, rating, player
+                    FROM ratings JOIN seasons ON ratings.season = seasons.id
+                    WHERE player = ?
+                    ORDER BY seasons.year desc, seasons.session desc, week desc
                     LIMIT ?;|]
   in
-    Postgres.query (Database.conn handle) listQuery (Postgres.Only nRecentWeeks)
+    Postgres.query (Database.conn handle) listQuery (playerID,  nRecentWeeks)

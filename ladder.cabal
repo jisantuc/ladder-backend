@@ -23,6 +23,7 @@ library
                      , Data.Ladder.Time
                      , Data.Ladder.Venue
                      , Database.Ladder
+                     , Database.Ladder.Match
                      , Database.Ladder.Matchup
                      , Database.Ladder.Player
                      , Database.Ladder.Rating
