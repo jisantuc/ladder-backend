@@ -1,5 +1,7 @@
 # ladder
 
+[![Build Status](https://travis-ci.org/jisantuc/ladder-backend.svg?branch=develop)](https://travis-ci.org/jisantuc/ladder-backend)
+
 A haskell servant API for a singles pool league where players schedule their own matches and are rated by the Elo algorithm.
 
 ## Developing
