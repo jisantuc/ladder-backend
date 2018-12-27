@@ -60,6 +60,7 @@ dbSpec :: IO ()
 dbSpec = do
   seasonDBSpec
   playerDBSpec
+  ratingDBSpec
   venueDBSpec
   matchupDBSpec
 
