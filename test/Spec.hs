@@ -3,6 +3,7 @@ module Main (main) where
 import           Data.Int                         (Int64)
 import           Data.Ladder.Matchup
 import           Data.Ladder.Player
+import           Data.Ladder.Rating
 import           Data.Ladder.Season
 import           Data.Ladder.Time
 import           Data.Ladder.Venue
@@ -10,6 +11,7 @@ import qualified Data.UUID.V4                     as UUIDv4
 import qualified Database.Ladder                  as Database
 import           Database.Ladder.Matchup
 import           Database.Ladder.Player
+import           Database.Ladder.Rating
 import           Database.Ladder.Season
 import           Database.Ladder.Venue
 import qualified Database.PostgreSQL.Simple       as Postgres
@@ -84,6 +86,27 @@ playerDBSpec = do
   _ <- deletePlayer handle player
   fetchedAThirdTime <- getPlayer handle (playerID player)
   assertEqual "the player is gone from the db" fetchedAThirdTime []
+
+ratingDBSpec :: Assertion
+ratingDBSpec = do
+  handle <- defaultHandle
+  player1 <- (\playerID -> Player playerID "foo@bogus.com" "Bogus" "Name" True) <$> UUIDv4.nextRandom
+  player2 <- (\playerID -> Player playerID "foo@bogus.com" "Bogus" "Name" True) <$> UUIDv4.nextRandom
+  season <- (\seasonID -> Season seasonID 2019 Summer) <$> UUIDv4.nextRandom
+  rating1 <- (\ratingID -> Rating ratingID (seasonID season) 1 1000 (playerID player1)) <$> UUIDv4.nextRandom
+  rating2 <- (\ratingID -> Rating ratingID (seasonID season) 2 1000 (playerID player1)) <$> UUIDv4.nextRandom
+  rating3 <- (\ratingID -> Rating ratingID (seasonID season) 3 1000 (playerID player1)) <$> UUIDv4.nextRandom
+  rating4 <- (\ratingID -> Rating ratingID (seasonID season) 3 1000 (playerID player2)) <$> UUIDv4.nextRandom
+  _ <- createPlayer handle player1
+  _ <- createPlayer handle player2
+  _ <- createSeason handle season
+  _ <- traverse (createRating handle) [rating1, rating2, rating3, rating4]
+  recentPlayer1 <- listRecentPlayerRatings handle (playerID player1) 3
+  assertEqual "player1's ratings are all there" recentPlayer1 [rating3, rating2, rating1]
+  recentPlayer2 <- listRecentPlayerRatings handle (playerID player2) 3
+  assertEqual "player2's ratings are all there" recentPlayer2 [rating4]
+  fetchedById <- getRating handle (ratingID rating2)
+  assertEqual "selection by id is fine" fetchedById [rating2]
 
 venueDBSpec :: Assertion
 venueDBSpec = do

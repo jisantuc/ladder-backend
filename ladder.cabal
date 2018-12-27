@@ -18,12 +18,14 @@ library
   exposed-modules:     Data.Ladder.Match
                      , Data.Ladder.Matchup
                      , Data.Ladder.Player
+                     , Data.Ladder.Rating
                      , Data.Ladder.Season
                      , Data.Ladder.Time
                      , Data.Ladder.Venue
                      , Database.Ladder
                      , Database.Ladder.Matchup
                      , Database.Ladder.Player
+                     , Database.Ladder.Rating
                      , Database.Ladder.Season
                      , Database.Ladder.Venue
                      , Error
