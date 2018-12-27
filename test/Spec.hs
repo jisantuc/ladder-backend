@@ -1,6 +1,7 @@
 module Main (main) where
 
 import           Data.Int                         (Int64)
+import           Data.Ladder.Match
 import           Data.Ladder.Matchup
 import           Data.Ladder.Player
 import           Data.Ladder.Rating
@@ -9,6 +10,7 @@ import           Data.Ladder.Time
 import           Data.Ladder.Venue
 import qualified Data.UUID.V4                     as UUIDv4
 import qualified Database.Ladder                  as Database
+import           Database.Ladder.Match
 import           Database.Ladder.Matchup
 import           Database.Ladder.Player
 import           Database.Ladder.Rating
@@ -25,6 +27,7 @@ import           Test.Hspec
 import           Test.HUnit
 
 import           Config
+import           Error
 
 main :: IO ()
 main = do
@@ -182,6 +185,26 @@ matchupDBSpec = do
   assertEqual "matchup in the future should be returned in upcoming matchups"
                        (head . (matchupID <$>) $ upcomingMatchups2)
                        (matchupID matchup)
+  match1 <- (\matchID -> Match matchID (matchupID matchup) currTime currTime 6 4 True (playerID player1)) <$>
+              UUIDv4.nextRandom
+  matchSubmission1 <- submitMatch handle match1
+  assertEqual "setting validated to true should have been ignored"
+         (validated . head <$> matchSubmission1)
+         (Right False)
+  attempt2 <- submitMatch handle match1
+  assertEqual "users shouldn't be able to submit matches twice" (Left MatchAlreadySubmitted) attempt2
+  -- player2 accidentally submits the scores backward
+  match2 <- (\matchID -> Match matchID (matchupID matchup) currTime currTime 4 6 True (playerID player2)) <$>
+              UUIDv4.nextRandom
+  matchSubmission2 <- submitMatch handle match2
+  match1Fetched <- getMatch handle (matchID match1)
+  assertEqual "match1 still shouldn't be valid" (_validated $ head match1Fetched) False
+  assertEqual "match2 should also be invalid" (validated . head <$> matchSubmission2) (Right False)
+  _ <- updateMatch handle (match2 { player1Wins = 6, player2Wins = 4 })
+  match1FetchedAgain <- getMatch handle (matchID match1)
+  match2Fetched <- getMatch handle (matchID match2)
+  assertEqual "match1 should be valid" (_validated $ head match1FetchedAgain) True
+  assertEqual "match2 should also be valid" (_validated $ head match2Fetched) True
   _ <- deleteMatchup handle matchup
   fetchedAFourthTime <- getMatchup handle (matchupID matchup)
   assertEqual "the matchup is gone from the db" fetchedAFourthTime []

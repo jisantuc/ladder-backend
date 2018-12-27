@@ -27,11 +27,11 @@ data MatchWithRelated = MatchWithRelated { _matchID     :: UUID
                                          , _player1Wins :: Int
                                          , _player2Wins :: Int
                                          , _validated   :: Bool
-                                         , _submittedBy :: Bool
+                                         , _submittedBy :: UUID
                                          , season       :: UUID
                                          , week         :: Int
-                                         , date         :: Maybe Time.SqlTime
-                                         , venue        :: Maybe UUID } deriving (Eq, Show, Generic)
+                                         , matchupDate  :: Maybe Time.SqlTime
+                                         , matchupVenue :: Maybe UUID } deriving (Eq, Show, Generic)
 
 instance Postgres.ToRow MatchWithRelated
 instance Postgres.FromRow MatchWithRelated

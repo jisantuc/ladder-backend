@@ -53,8 +53,8 @@ CREATE TABLE matches (
   venue uuid references venues(id) not null,
   start_time timestamp with time zone not null,
   recorded timestamp with time zone not null,
-  player1wins int not null,
-  player2ins int not null
+  player1_wins int not null,
+  player2_wins int not null
 );
 
 CREATE TABLE ratings (
