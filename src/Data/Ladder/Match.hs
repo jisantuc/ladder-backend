@@ -1,4 +1,6 @@
-module Data.Ladder.Match ( Match ) where
+module Data.Ladder.Match ( Match (..)
+                         , MatchWithRelated (..)
+                         , matchToUpdate ) where
 
 import qualified Data.Ladder.Time                   as Time
 import           Data.UUID                          (UUID)
@@ -18,3 +20,29 @@ data Match = Match { matchID     :: UUID
 
 instance Postgres.ToRow Match
 instance Postgres.FromRow Match
+
+data MatchWithRelated = MatchWithRelated { _matchID     :: UUID
+                                         , _startTime   :: Time.SqlTime
+                                         , _recorded    :: Time.SqlTime
+                                         , _player1Wins :: Int
+                                         , _player2Wins :: Int
+                                         , _validated   :: Bool
+                                         , _submittedBy :: Bool
+                                         , season       :: UUID
+                                         , week         :: Int
+                                         , date         :: Maybe Time.SqlTime
+                                         , venue        :: Maybe UUID } deriving (Eq, Show, Generic)
+
+instance Postgres.ToRow MatchWithRelated
+instance Postgres.FromRow MatchWithRelated
+
+data MatchUpdate = MatchUpdate { newPlayer1Wins :: Int
+                               , newPlayer2Wins :: Int
+                               , _matchID'      :: UUID } deriving (Eq, Show, Generic)
+
+instance Postgres.ToRow MatchUpdate
+
+matchToUpdate :: Match -> MatchUpdate
+matchToUpdate match = MatchUpdate { newPlayer1Wins = player1Wins match
+                                  , newPlayer2Wins = player2Wins match
+                                  , _matchID' = matchID match }
