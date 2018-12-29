@@ -3,6 +3,7 @@ module Data.Ladder.Venue (Venue (..), venueToUpdate) where
 import qualified Data.Ladder.Time                   as Time
 import           Data.UUID                          (UUID)
 import qualified Database.PostgreSQL.Simple.FromRow as Postgres
+import qualified Database.PostgreSQL.Simple.ToField as Postgres
 import qualified Database.PostgreSQL.Simple.ToRow   as Postgres
 import qualified Database.PostgreSQL.Simple.Types   as Postgres
 import           GHC.Generics                       (Generic)

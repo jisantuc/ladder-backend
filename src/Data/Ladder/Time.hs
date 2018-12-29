@@ -1,6 +1,7 @@
 module Data.Ladder.Time ( DayOfWeek (..)
                         , Session(..)
                         , SqlTime(..)
+                        , dowComplement
                         , now
                         , toUTCTime ) where
 
@@ -22,7 +23,7 @@ data DayOfWeek = Monday
   | Thursday
   | Friday
   | Saturday
-  | Sunday deriving (Eq, Show)
+  | Sunday deriving (Eq, Show, Enum)
 
 dowFromString :: String -> DayOfWeek
 dowFromString "Monday"    = Monday
@@ -43,6 +44,10 @@ instance Postgres.FromField DayOfWeek where
       Nothing -> Postgres.returnError Postgres.UnexpectedNull f ""
       Just dat ->
         pure $ dowFromString dat
+
+dowComplement :: [DayOfWeek] -> [DayOfWeek]
+dowComplement days =
+  filter (not . (\x -> elem x days)) [Monday .. Sunday]
 
 data Session = Spring
   | Summer

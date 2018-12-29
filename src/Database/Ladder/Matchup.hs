@@ -2,7 +2,8 @@ module Database.Ladder.Matchup ( getMatchup
                                , createMatchup
                                , scheduleMatchup
                                , deleteMatchup
-                               , listMatchupsForPlayer ) where
+                               , listMatchupsForPlayer
+                               , listMatchupsAtVenue ) where
 
 import           Data.Int                         (Int64)
 import           Data.Ladder.Matchup
@@ -57,3 +58,11 @@ listMatchupsForPlayer handle playerID =
   in
     Postgres.query (Database.conn handle) listQuery (playerID, playerID)
 
+listMatchupsAtVenue :: Database.Handle -> VenueFilter -> IO [Matchup]
+listMatchupsAtVenue handle filter =
+  let
+    listQuery = [sql|SELECT id, player1, player2, week, season, date, venue
+                    FROM matchups
+                    WHERE date(date) = date(?) AND venue = ?;|]
+  in
+    Postgres.query (Database.conn handle) listQuery filter
