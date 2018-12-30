@@ -51,10 +51,9 @@ deleteVenue handle venue =
 listVenues :: Database.Handle -> Postgres.PGArray Time.DayOfWeek -> IO [Venue]
 listVenues handle (Postgres.PGArray desiredNights) =
   let
-    listQuery = [sql|SELECT id, name, phone, address,
-                    league_nights ^& (? :: day_of_week[]) free_nights, cost
+    listQuery = [sql|SELECT id, name, phone, address, league_nights, cost
                     FROM venues
-                    WHERE free_nights <> ('{}' :: day_of_week[]) ;|]
+                    WHERE NOT (? :: day_of_week[]) <@ league_nights;|]
     badNights = Postgres.PGArray $ Time.dowComplement desiredNights
   in
     Postgres.query (Database.conn handle) listQuery (Postgres.Only badNights)

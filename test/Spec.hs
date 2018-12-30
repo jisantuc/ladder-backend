@@ -150,7 +150,7 @@ venueDBSpec = do
     [venue { Venue.name = "Actually Not a Fun Place"
            , Venue.leagueNights = Postgres.PGArray [Time.Monday, Time.Tuesday]}]
   listed <- Venue.listVenues handle
-            (Postgres.PGArray [Time.Wednesday .. Time.Sunday])
+            (Postgres.PGArray [Time.Monday, Time.Tuesday])
   assertEqual "list should get the only venue we've created" listed fetchedAgain
   _ <- Venue.deleteVenue handle venue
   listedAgain <- Venue.listVenues handle
