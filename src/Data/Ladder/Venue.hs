@@ -1,5 +1,6 @@
 module Data.Ladder.Venue (Venue (..), venueToUpdate) where
 
+import           Data.Aeson                         (FromJSON, ToJSON)
 import qualified Data.Ladder.Time                   as Time
 import           Data.UUID                          (UUID)
 import qualified Database.PostgreSQL.Simple.FromRow as Postgres
@@ -12,16 +13,19 @@ data Venue = Venue { venueID      :: UUID
                    , name         :: String
                    , phone        :: String
                    , address      :: String
-                   , leagueNights :: Postgres.PGArray Time.DayOfWeek
+                   , leagueNights :: Time.DaysOfWeek
                    , cost         :: Maybe Double } deriving (Eq, Show, Generic)
 
 instance Postgres.ToRow Venue
 instance Postgres.FromRow Venue
 
+instance ToJSON Venue
+instance FromJSON Venue
+
 data VenueUpdate = VenueUpdate { _name :: String
                                , _phone :: String
                                , _address :: String
-                               , _leagueNights :: Postgres.PGArray Time.DayOfWeek
+                               , _leagueNights :: Time.DaysOfWeek
                                , _cost :: Maybe Double
                                , _venueID :: UUID } deriving (Eq, Show, Generic)
 

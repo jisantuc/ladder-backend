@@ -1,11 +1,18 @@
 module Data.Ladder.Time ( DayOfWeek (..)
+                        , DaysOfWeek (..)
                         , Session(..)
                         , SqlTime(..)
+                        , allDaysOfWeek
+                        , dowFromString
                         , dowComplement
                         , now
                         , toUTCTime ) where
 
+import           Data.Aeson
 import qualified Data.ByteString.Char8                as B
+import           Data.Foldable                        (toList)
+import Data.Monoid ((<>))
+import qualified Data.Text                            as T
 import           Data.Time.Clock                      (UTCTime, getCurrentTime)
 import           Data.Time.LocalTime                  (ZonedTime, utc,
                                                        utcToZonedTime,
@@ -16,6 +23,24 @@ import           Database.PostgreSQL.Simple.Time      (Unbounded (..),
                                                        ZonedTimestamp,
                                                        zonedTimestampToBuilder)
 import qualified Database.PostgreSQL.Simple.ToField   as Postgres
+import qualified Database.PostgreSQL.Simple.Types     as Postgres
+import           GHC.Generics                         (Generic)
+import           Servant
+
+newtype DaysOfWeek = DaysOfWeek (Postgres.PGArray DayOfWeek) deriving (Eq, Show, Generic)
+
+instance Postgres.ToField DaysOfWeek where
+  toField (DaysOfWeek dows) = Postgres.toField dows
+instance Postgres.FromField DaysOfWeek where
+  fromField f v =
+    DaysOfWeek <$> (Postgres.fromField f v)
+
+instance ToJSON DaysOfWeek where
+  toJSON (DaysOfWeek (Postgres.PGArray dows)) = toJSON dows
+
+instance FromJSON DaysOfWeek where
+  parseJSON v =
+    DaysOfWeek . Postgres.PGArray <$> (parseJSON v)
 
 data DayOfWeek = Monday
   | Tuesday
@@ -23,7 +48,7 @@ data DayOfWeek = Monday
   | Thursday
   | Friday
   | Saturday
-  | Sunday deriving (Eq, Show, Enum)
+  | Sunday deriving (Eq, Show, Enum, Generic)
 
 dowFromString :: String -> DayOfWeek
 dowFromString "Monday"    = Monday
@@ -35,6 +60,14 @@ dowFromString "Saturday"  = Saturday
 dowFromString "Sunday"    = Sunday
 dowFromString s           = error $ "Not a valid day of week: " ++ s
 
+dowFromStringE :: T.Text -> Either T.Text DayOfWeek
+dowFromStringE = pure . dowFromString . T.unpack
+
+instance ToJSON DayOfWeek where
+  toJSON dow = toJSON $ show dow
+instance FromJSON DayOfWeek where
+  parseJSON (String v) = pure $ dowFromString (T.unpack v)
+
 instance Postgres.ToField DayOfWeek where
   toField dow = Postgres.Escape . B.pack $ show dow
 
@@ -44,6 +77,18 @@ instance Postgres.FromField DayOfWeek where
       Nothing -> Postgres.returnError Postgres.UnexpectedNull f ""
       Just dat ->
         pure $ dowFromString dat
+
+instance FromHttpApiData [DayOfWeek] where
+  parseQueryParam t =
+    case T.breakOn "," t of
+      (v, "") ->
+        pure <$> dowFromStringE v
+      (v, w) ->
+        (++) <$> (pure <$> dowFromStringE v) <*> parseQueryParam w
+
+
+allDaysOfWeek :: [DayOfWeek]
+allDaysOfWeek = [Monday .. Sunday]
 
 dowComplement :: [DayOfWeek] -> [DayOfWeek]
 dowComplement days =
