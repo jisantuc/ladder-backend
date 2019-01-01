@@ -12,6 +12,8 @@ import Servant
 
 import Data.UUID (UUID)
 
+import Debug.Trace
+
 type VenueAPI =
   "venues" :> QueryParam "freeNights" [Time.DayOfWeek] :> Get '[JSON] [Venue]
   -- :<|> "venues" :> Capture "venueID" UUID :> Get '[JSON] Venue

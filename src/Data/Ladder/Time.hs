@@ -11,7 +11,7 @@ module Data.Ladder.Time ( DayOfWeek (..)
 import           Data.Aeson
 import qualified Data.ByteString.Char8                as B
 import           Data.Foldable                        (toList)
-import Data.Monoid ((<>))
+import           Data.Monoid                          ((<>))
 import qualified Data.Text                            as T
 import           Data.Time.Clock                      (UTCTime, getCurrentTime)
 import           Data.Time.LocalTime                  (ZonedTime, utc,
@@ -80,12 +80,11 @@ instance Postgres.FromField DayOfWeek where
 
 instance FromHttpApiData [DayOfWeek] where
   parseQueryParam t =
-    case T.breakOn "," t of
-      (v, "") ->
-        pure <$> dowFromStringE v
-      (v, w) ->
-        (++) <$> (pure <$> dowFromStringE v) <*> parseQueryParam w
-
+    go  (Right []) t
+    where
+      go (Left t) _ = Left t
+      go r@(Right days) text =
+        traverse dowFromStringE $ T.split (== ',') text
 
 allDaysOfWeek :: [DayOfWeek]
 allDaysOfWeek = [Monday .. Sunday]

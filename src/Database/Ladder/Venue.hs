@@ -47,13 +47,12 @@ deleteVenue handle venue =
   in
     Postgres.execute (Database.conn handle) deleteQuery (Postgres.Only $ venueID venue)
 
--- TODO how to do array disjoint in postgres?
 listVenues :: Database.Handle -> Postgres.PGArray Time.DayOfWeek -> IO [Venue]
 listVenues handle (Postgres.PGArray desiredNights) =
   let
     listQuery = [sql|SELECT id, name, phone, address, league_nights, cost
                     FROM venues
                     WHERE NOT (? :: day_of_week[]) <@ league_nights;|]
-    badNights = Postgres.PGArray $ Time.dowComplement desiredNights
+    badNights = Postgres.PGArray desiredNights
   in
     Postgres.query (Database.conn handle) listQuery (Postgres.Only badNights)
