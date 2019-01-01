@@ -1,4 +1,8 @@
 module Main where
 
+import Network.Wai
+import Network.Wai.Handler.Warp
+import Server
+
 main :: IO ()
-main = print "good job"
+main = run 8081 application

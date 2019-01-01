@@ -1,4 +1,4 @@
-module Data.Ladder.Matchup ( Matchup (..) ) where
+module Data.Ladder.Matchup ( Matchup (..), VenueFilter (..) ) where
 
 import qualified Data.Ladder.Time                   as Time
 import           Data.UUID                          (UUID)
@@ -16,3 +16,8 @@ data Matchup = Matchup { matchupID :: UUID
 
 instance Postgres.ToRow Matchup
 instance Postgres.FromRow Matchup
+
+data VenueFilter = VenueFilter { dayOfWeek :: Time.SqlTime
+                               , venueID   :: UUID} deriving (Eq, Show, Generic)
+
+instance Postgres.ToRow VenueFilter

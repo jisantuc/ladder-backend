@@ -1,21 +1,21 @@
 module Main (main) where
 
 import           Data.Int                         (Int64)
-import           Data.Ladder.Match
-import           Data.Ladder.Matchup
-import           Data.Ladder.Player
-import           Data.Ladder.Rating
-import           Data.Ladder.Season
-import           Data.Ladder.Time
-import           Data.Ladder.Venue
+import qualified Data.Ladder.Match                as Match
+import qualified Data.Ladder.Matchup              as Matchup
+import qualified Data.Ladder.Player               as Player
+import qualified Data.Ladder.Rating               as Rating
+import qualified Data.Ladder.Season               as Season
+import qualified Data.Ladder.Time                 as Time
+import qualified Data.Ladder.Venue                as Venue
 import qualified Data.UUID.V4                     as UUIDv4
 import qualified Database.Ladder                  as Database
-import           Database.Ladder.Match
-import           Database.Ladder.Matchup
-import           Database.Ladder.Player
-import           Database.Ladder.Rating
-import           Database.Ladder.Season
-import           Database.Ladder.Venue
+import qualified Database.Ladder.Match            as Match
+import qualified Database.Ladder.Matchup          as Matchup
+import qualified Database.Ladder.Player           as Player
+import qualified Database.Ladder.Rating           as Rating
+import qualified Database.Ladder.Season           as Season
+import qualified Database.Ladder.Venue            as Venue
 import qualified Database.PostgreSQL.Simple       as Postgres
 import           Database.PostgreSQL.Simple.SqlQQ
 import qualified Database.PostgreSQL.Simple.Types as Postgres
@@ -70,105 +70,151 @@ dbSpec = do
 seasonDBSpec :: Assertion
 seasonDBSpec = do
   handle <- defaultHandle
-  season <- (\seasonID -> Season seasonID 2019 Summer) <$> UUIDv4.nextRandom
-  created <- createSeason handle season
-  listed <- getCurrentSeason handle
+  season <- (\seasonID -> Season.Season seasonID 2019 Time.Summer) <$> UUIDv4.nextRandom
+  created <- Season.createSeason handle season
+  listed <- Season.getCurrentSeason handle
   assertEqual "return from created should match return from latest" created listed
   assertEqual "return from created should be the same as source season" created [season]
 
 playerDBSpec :: Assertion
 playerDBSpec = do
   handle <- defaultHandle
-  player <- (\playerID -> Player playerID "foo@bogus.com" "Bogus" "Name" True) <$> UUIDv4.nextRandom
-  inserted <- createPlayer handle player
-  retrieved <- getPlayer handle (playerID player)
+  player <- (\playerID -> Player.Player playerID "foo@bogus.com" "Bogus" "Name" True) <$> UUIDv4.nextRandom
+  inserted <- Player.createPlayer handle player
+  retrieved <- Player.getPlayer handle (Player.playerID player)
   assertEqual "return from fetch is the same as return from insert" inserted retrieved
   assertEqual "return from insert is the player we inserted" inserted [player]
-  _ <- updatePlayer handle (player { email = "bar@bogus.net" })
-  fetchedAgain <- getPlayer handle (playerID player)
-  assertEqual "the email was updated" (email <$> fetchedAgain) ["bar@bogus.net"]
-  _ <- deletePlayer handle player
-  fetchedAThirdTime <- getPlayer handle (playerID player)
+  _ <- Player.updatePlayer handle (player { Player.email = "bar@bogus.net" })
+  fetchedAgain <- Player.getPlayer handle (Player.playerID player)
+  assertEqual "the email was updated" (Player.email <$> fetchedAgain) ["bar@bogus.net"]
+  _ <- Player.deletePlayer handle player
+  fetchedAThirdTime <- Player.getPlayer handle (Player.playerID player)
   assertEqual "the player is gone from the db" fetchedAThirdTime []
 
 ratingDBSpec :: Assertion
 ratingDBSpec = do
   handle <- defaultHandle
-  player1 <- (\playerID -> Player playerID "foo@bogus.com" "Bogus" "Name" True) <$> UUIDv4.nextRandom
-  player2 <- (\playerID -> Player playerID "foo@bogus.com" "Bogus" "Name" True) <$> UUIDv4.nextRandom
-  season <- (\seasonID -> Season seasonID 2019 Summer) <$> UUIDv4.nextRandom
-  rating1 <- (\ratingID -> Rating ratingID (seasonID season) 1 1000 (playerID player1)) <$> UUIDv4.nextRandom
-  rating2 <- (\ratingID -> Rating ratingID (seasonID season) 2 1000 (playerID player1)) <$> UUIDv4.nextRandom
-  rating3 <- (\ratingID -> Rating ratingID (seasonID season) 3 1000 (playerID player1)) <$> UUIDv4.nextRandom
-  rating4 <- (\ratingID -> Rating ratingID (seasonID season) 3 1000 (playerID player2)) <$> UUIDv4.nextRandom
-  _ <- createPlayer handle player1
-  _ <- createPlayer handle player2
-  _ <- createSeason handle season
-  _ <- traverse (createRating handle) [rating1, rating2, rating3, rating4]
-  recentPlayer1 <- listRecentPlayerRatings handle (playerID player1) 3
+  player1 <- (\playerID -> Player.Player playerID "foo@bogus.com" "Bogus" "Name" True) <$> UUIDv4.nextRandom
+  player2 <- (\playerID -> Player.Player playerID "foo@bogus.com" "Bogus" "Name" True) <$> UUIDv4.nextRandom
+  season <- (\seasonID -> Season.Season seasonID 2019 Time.Summer) <$> UUIDv4.nextRandom
+  rating1 <- (\ratingID -> Rating.Rating ratingID
+               (Season.seasonID season)
+               1
+               1000
+               (Player.playerID player1)) <$> UUIDv4.nextRandom
+  rating2 <- (\ratingID -> Rating.Rating ratingID
+               (Season.seasonID season)
+               2
+               1000
+               (Player.playerID player1)) <$> UUIDv4.nextRandom
+  rating3 <- (\ratingID -> Rating.Rating ratingID
+               (Season.seasonID season)
+               3
+               1000
+               (Player.playerID player1)) <$> UUIDv4.nextRandom
+  rating4 <- (\ratingID -> Rating.Rating ratingID
+               (Season.seasonID season)
+               3
+               1000
+               (Player.playerID player2)) <$> UUIDv4.nextRandom
+  _ <- Player.createPlayer handle player1
+  _ <- Player.createPlayer handle player2
+  _ <- Season.createSeason handle season
+  _ <- traverse (Rating.createRating handle) [rating1, rating2, rating3, rating4]
+  recentPlayer1 <- Rating.listRecentPlayerRatings handle (Player.playerID player1) 3
   assertEqual "player1's ratings are all there" recentPlayer1 [rating3, rating2, rating1]
-  recentPlayer2 <- listRecentPlayerRatings handle (playerID player2) 3
+  recentPlayer2 <- Rating.listRecentPlayerRatings handle (Player.playerID player2) 3
   assertEqual "player2's ratings are all there" recentPlayer2 [rating4]
-  fetchedById <- getRating handle (ratingID rating2)
+  fetchedById <- Rating.getRating handle (Rating.ratingID rating2)
   assertEqual "selection by id is fine" fetchedById [rating2]
 
 venueDBSpec :: Assertion
 venueDBSpec = do
   handle <- defaultHandle
   venue <- (\venueID ->
-              Venue venueID
+              Venue.Venue venueID
               "Quite Good and Fun Pool Hall"
               "2670001234"
               "Somewhere in Center City, Philadelphia, PA"
-              (Postgres.PGArray [Monday, Tuesday])
+              (Time.DaysOfWeek $ Postgres.PGArray [])
               (Just 10.75)) <$> UUIDv4.nextRandom
-  inserted <- createVenue handle venue
-  retrieved <- getVenue handle (venueID venue)
+  inserted <- Venue.createVenue handle venue
+  retrieved <- Venue.getVenue handle (Venue.venueID venue)
   assertEqual "return from fetch is the same as return from insert" inserted retrieved
   assertEqual "return from insert is the player we inserted" inserted [venue]
-  _ <- updateVenue handle (venue { name = "Actually Not a Fun Place", leagueNights = Postgres.PGArray [] })
-  fetchedAgain <- getVenue handle (venueID venue)
+  _ <- Venue.updateVenue handle (venue { Venue.name = "Actually Not a Fun Place"
+                                       , Venue.leagueNights =
+                                         Time.DaysOfWeek $ Postgres.PGArray [Time.Monday, Time.Tuesday] })
+  fetchedAgain <- Venue.getVenue handle (Venue.venueID venue)
   assertEqual "update should have done something" fetchedAgain $
-    [venue { name = "Actually Not a Fun Place", leagueNights = Postgres.PGArray []}]
-  listed <- listVenues handle
+    [venue { Venue.name = "Actually Not a Fun Place"
+           , Venue.leagueNights = Time.DaysOfWeek $ Postgres.PGArray [Time.Monday, Time.Tuesday]}]
+  listed <- Venue.listVenues handle
+            (Postgres.PGArray [Time.Monday, Time.Wednesday])
   assertEqual "list should get the only venue we've created" listed fetchedAgain
-  _ <- deleteVenue handle venue
-  listedAgain <- listVenues handle
+  _ <- Venue.deleteVenue handle venue
+  listedAgain <- Venue.listVenues handle
+                 (Postgres.PGArray [Time.Monday .. Time.Sunday])
   assertEqual "the venue is gone from the db" listedAgain []
 
 matchupDBSpec :: Assertion
 matchupDBSpec = do
   handle <- defaultHandle
-  currTime <- now
-  player1 <- (\playerID -> Player playerID "foo@bogus.com" "Bogus" "Name" True) <$> UUIDv4.nextRandom
-  player2 <- (\playerID -> Player playerID "bar@absurd.com" "Bogus" "Name" True) <$> UUIDv4.nextRandom
-  season <- (\seasonID -> Season seasonID 2019 Summer) <$> UUIDv4.nextRandom
+  currTime <- Time.now
+  player1 <- (\playerID -> Player.Player playerID "foo@bogus.com" "Bogus" "Name" True) <$> UUIDv4.nextRandom
+  player2 <- (\playerID -> Player.Player playerID "bar@absurd.com" "Bogus" "Name" True) <$> UUIDv4.nextRandom
+  season <- (\seasonID -> Season.Season seasonID 2019 Time.Summer) <$> UUIDv4.nextRandom
   matchup <- (\matchupID ->
-                Matchup matchupID (playerID player1) (playerID player2) 4 (seasonID season) Nothing Nothing) <$>
+                Matchup.Matchup
+                matchupID
+                (Player.playerID player1)
+                (Player.playerID player2)
+                4
+                (Season.seasonID season)
+                Nothing
+                Nothing) <$>
              UUIDv4.nextRandom
   venue <- (\venueID ->
-              Venue venueID
+              Venue.Venue venueID
               "Quite Good and Fun Pool Hall"
               "2670001234"
               "Somewhere in Center City, Philadelphia, PA"
-              (Postgres.PGArray [Monday, Tuesday])
+              (Time.DaysOfWeek $ Postgres.PGArray [Time.Monday, Time.Tuesday])
               (Just 10.75)) <$> UUIDv4.nextRandom
-  _ <- createSeason handle season
-  _ <- createPlayer handle player1
-  _ <- createPlayer handle player2
-  _ <- createVenue handle venue
-  inserted <- createMatchup handle matchup
-  retrieved <- getMatchup handle (matchupID matchup)
+  otherVenue <- (\venueID ->
+              Venue.Venue venueID
+              "Not Fun Pool Hall"
+              "2670001234"
+              "Somewhere in Center City, Philadelphia, PA"
+              (Time.DaysOfWeek $ Postgres.PGArray [Time.Monday, Time.Tuesday])
+              (Just 10.75)) <$> UUIDv4.nextRandom
+  _ <- Season.createSeason handle season
+  _ <- Player.createPlayer handle player1
+  _ <- Player.createPlayer handle player2
+  _ <- Venue.createVenue handle venue
+  _ <- Venue.createVenue handle otherVenue
+  inserted <- Matchup.createMatchup handle matchup
+  retrieved <- Matchup.getMatchup handle (Matchup.matchupID matchup)
   assertEqual "return from fetch is the same as return from insert" inserted retrieved
   assertEqual "return from insert is the matchup we inserted" inserted [matchup]
-  _ <- scheduleMatchup handle (matchup { date = Just currTime })
-  fetchedAgain <- getMatchup handle (matchupID matchup)
+  _ <- Matchup.scheduleMatchup handle (matchup { Matchup.date = Just currTime })
+  fetchedAgain <- Matchup.getMatchup handle (Matchup.matchupID matchup)
   assertEqual "updating just the date shouldn't have changed anything" fetchedAgain [matchup]
-  _ <- scheduleMatchup handle (matchup { date = Just currTime, venue = Just (venueID venue) })
-  fetchedAThirdTime <- getMatchup handle (matchupID matchup)
+  _ <- Matchup.scheduleMatchup handle (matchup { Matchup.date = Just currTime
+                                       , Matchup.venue = Just (Venue.venueID venue) })
+  fetchedAThirdTime <- Matchup.getMatchup handle (Matchup.matchupID matchup)
   assertEqual "updating both date and venue should have set venue"
-    (head . (Data.Ladder.Matchup.venue <$>) $ fetchedAThirdTime)
-    (Just $ venueID venue)
+    (head . (Matchup.venue <$>) $ fetchedAThirdTime)
+    (Just $ Venue.venueID venue)
+  matchupsAtBadPlace <- Matchup.listMatchupsAtVenue
+    handle
+    (Matchup.VenueFilter currTime (Venue.venueID otherVenue))
+  assertEqual "there shouldnt' be any matchups at the bad place" [] matchupsAtBadPlace
+  matchupsAtGoodPlace <- Matchup.listMatchupsAtVenue
+    handle
+    (Matchup.VenueFilter currTime (Venue.venueID venue))
+  assertEqual "there should be a matchup at the good place"
+    [(Matchup.matchupID matchup)] (Matchup.matchupID <$> matchupsAtGoodPlace)
   -- Fails: too much precision before it goes into the db
   -- but uncommenting reveals that it's working, just in a way that's hard to test because of precision
   -- differences on either side of the db boundary
@@ -176,35 +222,49 @@ matchupDBSpec = do
   --   ((head $ date <$> fetchedAThirdTime) >>= toUTCTime)
   --   (Just currTime >>= toUTCTime)
   -- out of datamodel operations because I didn't make a way to increment time, oops
-  upcomingMatchups <- listMatchupsForPlayer handle (playerID player1)
+  upcomingMatchups <- Matchup.listMatchupsForPlayer handle (Player.playerID player1)
   assertEqual "matchup in the past should not be returned in upcoming matchups" upcomingMatchups []
   _ <- Postgres.execute (Database.conn handle)
        [sql|UPDATE matchups SET date = date + interval '7 days' where id = ?; |]
-         (Postgres.Only (matchupID matchup))
-  upcomingMatchups2 <- listMatchupsForPlayer handle (playerID player1)
+         (Postgres.Only (Matchup.matchupID matchup))
+  upcomingMatchups2 <- Matchup.listMatchupsForPlayer handle (Player.playerID player1)
   assertEqual "matchup in the future should be returned in upcoming matchups"
-                       (head . (matchupID <$>) $ upcomingMatchups2)
-                       (matchupID matchup)
-  match1 <- (\matchID -> Match matchID (matchupID matchup) currTime currTime 6 4 True (playerID player1)) <$>
+                       (head . (Matchup.matchupID <$>) $ upcomingMatchups2)
+                       (Matchup.matchupID matchup)
+  match1 <- (\matchID -> Match.Match matchID
+              (Matchup.matchupID matchup)
+              currTime
+              currTime
+              6
+              4
+              True
+              (Player.playerID player1)) <$>
               UUIDv4.nextRandom
-  matchSubmission1 <- submitMatch handle match1
+  matchSubmission1 <- Match.submitMatch handle match1
   assertEqual "setting validated to true should have been ignored"
-         (validated . head <$> matchSubmission1)
+         (Match.validated . head <$> matchSubmission1)
          (Right False)
-  attempt2 <- submitMatch handle match1
+  attempt2 <- Match.submitMatch handle match1
   assertEqual "users shouldn't be able to submit matches twice" (Left MatchAlreadySubmitted) attempt2
   -- player2 accidentally submits the scores backward
-  match2 <- (\matchID -> Match matchID (matchupID matchup) currTime currTime 4 6 True (playerID player2)) <$>
+  match2 <- (\matchID -> Match.Match matchID
+              (Matchup.matchupID matchup)
+              currTime
+              currTime
+              4
+              6
+              True
+              (Player.playerID player2)) <$>
               UUIDv4.nextRandom
-  matchSubmission2 <- submitMatch handle match2
-  match1Fetched <- getMatch handle (matchID match1)
-  assertEqual "match1 still shouldn't be valid" (_validated $ head match1Fetched) False
-  assertEqual "match2 should also be invalid" (validated . head <$> matchSubmission2) (Right False)
-  _ <- updateMatch handle (match2 { player1Wins = 6, player2Wins = 4 })
-  match1FetchedAgain <- getMatch handle (matchID match1)
-  match2Fetched <- getMatch handle (matchID match2)
-  assertEqual "match1 should be valid" (_validated $ head match1FetchedAgain) True
-  assertEqual "match2 should also be valid" (_validated $ head match2Fetched) True
-  _ <- deleteMatchup handle matchup
-  fetchedAFourthTime <- getMatchup handle (matchupID matchup)
+  matchSubmission2 <- Match.submitMatch handle match2
+  match1Fetched <- Match.getMatch handle (Match.matchID match1)
+  assertEqual "match1 still shouldn't be valid" (Match._validated $ head match1Fetched) False
+  assertEqual "match2 should also be invalid" (Match.validated . head <$> matchSubmission2) (Right False)
+  _ <- Match.updateMatch handle (match2 { Match.player1Wins = 6, Match.player2Wins = 4 })
+  match1FetchedAgain <- Match.getMatch handle (Match.matchID match1)
+  match2Fetched <- Match.getMatch handle (Match.matchID match2)
+  assertEqual "match1 should be valid" (Match._validated $ head match1FetchedAgain) True
+  assertEqual "match2 should also be valid" (Match._validated $ head match2Fetched) True
+  _ <- Matchup.deleteMatchup handle matchup
+  fetchedAFourthTime <- Matchup.getMatchup handle (Matchup.matchupID matchup)
   assertEqual "the matchup is gone from the db" fetchedAFourthTime []
