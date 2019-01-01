@@ -136,7 +136,7 @@ venueDBSpec = do
               "Quite Good and Fun Pool Hall"
               "2670001234"
               "Somewhere in Center City, Philadelphia, PA"
-              (Postgres.PGArray [])
+              (Time.DaysOfWeek $ Postgres.PGArray [])
               (Just 10.75)) <$> UUIDv4.nextRandom
   inserted <- Venue.createVenue handle venue
   retrieved <- Venue.getVenue handle (Venue.venueID venue)
@@ -144,13 +144,13 @@ venueDBSpec = do
   assertEqual "return from insert is the player we inserted" inserted [venue]
   _ <- Venue.updateVenue handle (venue { Venue.name = "Actually Not a Fun Place"
                                        , Venue.leagueNights =
-                                         Postgres.PGArray [Time.Monday, Time.Tuesday] })
+                                         Time.DaysOfWeek $ Postgres.PGArray [Time.Monday, Time.Tuesday] })
   fetchedAgain <- Venue.getVenue handle (Venue.venueID venue)
   assertEqual "update should have done something" fetchedAgain $
     [venue { Venue.name = "Actually Not a Fun Place"
-           , Venue.leagueNights = Postgres.PGArray [Time.Monday, Time.Tuesday]}]
+           , Venue.leagueNights = Time.DaysOfWeek $ Postgres.PGArray [Time.Monday, Time.Tuesday]}]
   listed <- Venue.listVenues handle
-            (Postgres.PGArray [Time.Monday, Time.Tuesday])
+            (Postgres.PGArray [Time.Monday, Time.Wednesday])
   assertEqual "list should get the only venue we've created" listed fetchedAgain
   _ <- Venue.deleteVenue handle venue
   listedAgain <- Venue.listVenues handle
@@ -179,14 +179,14 @@ matchupDBSpec = do
               "Quite Good and Fun Pool Hall"
               "2670001234"
               "Somewhere in Center City, Philadelphia, PA"
-              (Postgres.PGArray [Time.Monday, Time.Tuesday])
+              (Time.DaysOfWeek $ Postgres.PGArray [Time.Monday, Time.Tuesday])
               (Just 10.75)) <$> UUIDv4.nextRandom
   otherVenue <- (\venueID ->
               Venue.Venue venueID
               "Not Fun Pool Hall"
               "2670001234"
               "Somewhere in Center City, Philadelphia, PA"
-              (Postgres.PGArray [Time.Monday, Time.Tuesday])
+              (Time.DaysOfWeek $ Postgres.PGArray [Time.Monday, Time.Tuesday])
               (Just 10.75)) <$> UUIDv4.nextRandom
   _ <- Season.createSeason handle season
   _ <- Player.createPlayer handle player1

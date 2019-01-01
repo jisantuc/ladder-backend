@@ -13,6 +13,8 @@ import qualified Database.Ladder                  as Database
 import qualified Database.PostgreSQL.Simple       as Postgres
 import           Database.PostgreSQL.Simple.SqlQQ
 
+import Debug.Trace
+
 getMatchup :: Database.Handle -> UUID -> IO [Matchup]
 getMatchup handle matchupID =
   let
@@ -65,4 +67,4 @@ listMatchupsAtVenue handle filter =
                     FROM matchups
                     WHERE date(date) = date(?) AND venue = ?;|]
   in
-    Postgres.query (Database.conn handle) listQuery filter
+    Postgres.query (Database.conn handle) listQuery ((trace $ "filters are " ++ show filter) filter)
