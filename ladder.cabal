@@ -18,6 +18,7 @@ library
   exposed-modules:     Data.Ladder.Match
                      , Data.Ladder.Matchup
                      , Data.Ladder.Player
+                     , Data.Ladder.ProposedMatch
                      , Data.Ladder.Rating
                      , Data.Ladder.Season
                      , Data.Ladder.Time
@@ -26,6 +27,7 @@ library
                      , Database.Ladder.Match
                      , Database.Ladder.Matchup
                      , Database.Ladder.Player
+                     , Database.Ladder.ProposedMatch
                      , Database.Ladder.Rating
                      , Database.Ladder.Season
                      , Database.Ladder.Venue
