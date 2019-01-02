@@ -4,6 +4,7 @@ import           Data.Int                         (Int64)
 import qualified Data.Ladder.Match                as Match
 import qualified Data.Ladder.Matchup              as Matchup
 import qualified Data.Ladder.Player               as Player
+import qualified Data.Ladder.ProposedMatch        as ProposedMatch
 import qualified Data.Ladder.Rating               as Rating
 import qualified Data.Ladder.Season               as Season
 import qualified Data.Ladder.Time                 as Time
@@ -13,6 +14,7 @@ import qualified Database.Ladder                  as Database
 import qualified Database.Ladder.Match            as Match
 import qualified Database.Ladder.Matchup          as Matchup
 import qualified Database.Ladder.Player           as Player
+import qualified Database.Ladder.ProposedMatch    as ProposedMatch
 import qualified Database.Ladder.Rating           as Rating
 import qualified Database.Ladder.Season           as Season
 import qualified Database.Ladder.Venue            as Venue
@@ -66,6 +68,7 @@ dbSpec = do
   ratingDBSpec
   venueDBSpec
   matchupDBSpec
+  proposedMatchDBSpec
 
 seasonDBSpec :: Assertion
 seasonDBSpec = do
@@ -268,3 +271,75 @@ matchupDBSpec = do
   _ <- Matchup.deleteMatchup handle matchup
   fetchedAFourthTime <- Matchup.getMatchup handle (Matchup.matchupID matchup)
   assertEqual "the matchup is gone from the db" fetchedAFourthTime []
+
+proposedMatchDBSpec :: Assertion
+proposedMatchDBSpec = do
+  handle <- defaultHandle
+  currTime <- Time.now
+  venue <- (\venueID ->
+              Venue.Venue venueID
+              "Quite Good and Fun Pool Hall"
+              "2670001234"
+              "Somewhere in Center City, Philadelphia, PA"
+              (Time.DaysOfWeek $ Postgres.PGArray [Time.Monday, Time.Tuesday])
+              (Just 10.75)) <$> UUIDv4.nextRandom
+  otherVenue <- (\venueID ->
+              Venue.Venue venueID
+              "Not Fun Pool Hall"
+              "2670001234"
+              "Somewhere in Center City, Philadelphia, PA"
+              (Time.DaysOfWeek $ Postgres.PGArray [Time.Monday, Time.Tuesday])
+              (Just 10.75)) <$> UUIDv4.nextRandom
+  player1 <- (\playerID -> Player.Player playerID "foo@bogus.com" "Bogus" "Name" True) <$> UUIDv4.nextRandom
+  player2 <- (\playerID -> Player.Player playerID "bar@absurd.com" "Bogus" "Name" True) <$> UUIDv4.nextRandom
+  season <- (\seasonID -> Season.Season seasonID 2019 Time.Summer) <$> UUIDv4.nextRandom
+  matchup <- (\matchupID ->
+                Matchup.Matchup
+                matchupID
+                (Player.playerID player1)
+                (Player.playerID player2)
+                4
+                (Season.seasonID season)
+                Nothing
+                Nothing) <$>
+             UUIDv4.nextRandom
+  proposedMatch1 <- (\pmID -> ProposedMatch.ProposedMatch
+                      pmID
+                      (Matchup.matchupID matchup)
+                      (Player.playerID player1)
+                      (Venue.venueID venue)
+                      currTime
+                    ) <$> UUIDv4.nextRandom
+  proposedMatch2 <- (\pmID -> ProposedMatch.ProposedMatch
+                      pmID
+                      (Matchup.matchupID matchup)
+                      (Player.playerID player1)
+                      (Venue.venueID venue)
+                      currTime
+                    ) <$> UUIDv4.nextRandom
+  _ <- Season.createSeason handle season
+  _ <- Venue.createVenue handle venue
+  _ <- Venue.createVenue handle otherVenue
+  _ <- Player.createPlayer handle player1
+  _ <- Player.createPlayer handle player2
+  _ <- Matchup.createMatchup handle matchup
+  proposed1 <- ProposedMatch.proposeMatch handle proposedMatch1
+  proposed2 <- ProposedMatch.proposeMatch handle proposedMatch2
+  -- Again -- just a time precision issue -- uncomment and check the difference to prove
+  -- assertEqual "returned match from insertion should be fine 1" proposed1 [proposedMatch1]
+  -- assertEqual "returned match from insertion should be fine 2" proposed2 [proposedMatch2]
+  fetched <- ProposedMatch.getProposedMatch handle (ProposedMatch.proposedMatchID proposedMatch1)
+  assertEqual "proposed matches should be fetchable" (ProposedMatch.proposedMatchID <$> fetched)
+    (pure $ ProposedMatch.proposedMatchID proposedMatch1)
+  listed <- ProposedMatch.listProposedMatches handle (Matchup.matchupID matchup)
+  assertEqual "there are two proposed, unaccepted, uncanceled proposed matches" (length listed) 2
+  _ <- ProposedMatch.cancelMatch handle (ProposedMatch.proposedMatchID proposedMatch1)
+  listed2 <- ProposedMatch.listProposedMatches handle (Matchup.matchupID matchup)
+  assertEqual "there is one proposed, unaccepted, uncanceled proposed match after cancelation"
+    (length listed2) 1
+  _ <- ProposedMatch.acceptMatch handle proposedMatch2
+  listed3 <- ProposedMatch.listProposedMatches handle (Matchup.matchupID matchup)
+  assertEqual "there are no unaccepted, uncanceled matches after acceptance"
+    (length listed3) 0
+  updated <- ProposedMatch.cancelMatch handle (ProposedMatch.proposedMatchID proposedMatch2)
+  assertEqual "cancelling an already accepted match shouldn't do anything" updated 0
