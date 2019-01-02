@@ -17,7 +17,7 @@ import           Database.PostgreSQL.Simple.SqlQQ
 getProposedMatch :: Database.Handle -> UUID -> IO [ProposedMatch]
 getProposedMatch handle proposedMatchID =
   let
-    fetchQuery = [sql|SELECT id, matchup, proposed_by, venue, match_time, accepted
+    fetchQuery = [sql|SELECT id, matchup, proposed_by, venue, match_time
                      FROM proposed_matches
                      WHERE id = ?;|]
   in
@@ -35,9 +35,12 @@ proposeMatch handle proposedMatch =
 acceptMatch :: Database.Handle -> ProposedMatch -> IO Int64
 acceptMatch handle proposedMatch =
   let
-    updateQuery = [sql|UPDATE proposed_matches SET accepted = true WHERE id = ?;|]
+    updateQuery = [sql|UPDATE proposed_matches SET accepted = true
+                      WHERE
+                      id = ? AND accepted = false AND canceled = false;|]
     cancelQuery = [sql|UPDATE proposed_matches SET canceled = true
-                      WHERE id = ? AND matchup = ?; |]
+                      WHERE
+                      id = ? AND matchup = ? AND accepted = false AND canceled = false; |]
   in
     Postgres.execute (Database.conn handle) updateQuery (Postgres.Only (proposedMatchID proposedMatch)) <*
     Postgres.execute (Database.conn handle) cancelQuery (proposedMatchID proposedMatch, matchup proposedMatch)
@@ -45,8 +48,8 @@ acceptMatch handle proposedMatch =
 cancelMatch :: Database.Handle -> UUID -> IO Int64
 cancelMatch handle proposedMatchID =
   let
-    cancelQuery = [sql|UPDATE proposed_matches SET cancled = true
-                      WHERE id = ?; |]
+    cancelQuery = [sql|UPDATE proposed_matches SET canceled = true
+                      WHERE id = ? AND accepted = false; |]
   in
     Postgres.execute (Database.conn handle) cancelQuery (Postgres.Only proposedMatchID)
 
@@ -55,6 +58,6 @@ listProposedMatches handle matchupID =
   let
     listQuery = [sql|SELECT id, matchup, proposed_by, venue, match_time
                     FROM proposed_matches
-                    WHERE matchup = ? AND canceled = false; |]
+                    WHERE matchup = ? AND canceled = false AND accepted = false; |]
   in
     Postgres.query (Database.conn handle) listQuery (Postgres.Only matchupID)

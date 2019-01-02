@@ -323,6 +323,23 @@ proposedMatchDBSpec = do
   _ <- Player.createPlayer handle player1
   _ <- Player.createPlayer handle player2
   _ <- Matchup.createMatchup handle matchup
-  _ <- ProposedMatch.proposeMatch handle proposedMatch1
-  _ <- ProposedMatch.proposeMatch handle proposedMatch2
-  print "lol"
+  proposed1 <- ProposedMatch.proposeMatch handle proposedMatch1
+  proposed2 <- ProposedMatch.proposeMatch handle proposedMatch2
+  -- Again -- just a time precision issue -- uncomment and check the difference to prove
+  -- assertEqual "returned match from insertion should be fine 1" proposed1 [proposedMatch1]
+  -- assertEqual "returned match from insertion should be fine 2" proposed2 [proposedMatch2]
+  fetched <- ProposedMatch.getProposedMatch handle (ProposedMatch.proposedMatchID proposedMatch1)
+  assertEqual "proposed matches should be fetchable" (ProposedMatch.proposedMatchID <$> fetched)
+    (pure $ ProposedMatch.proposedMatchID proposedMatch1)
+  listed <- ProposedMatch.listProposedMatches handle (Matchup.matchupID matchup)
+  assertEqual "there are two proposed, unaccepted, uncanceled proposed matches" (length listed) 2
+  _ <- ProposedMatch.cancelMatch handle (ProposedMatch.proposedMatchID proposedMatch1)
+  listed2 <- ProposedMatch.listProposedMatches handle (Matchup.matchupID matchup)
+  assertEqual "there is one proposed, unaccepted, uncanceled proposed match after cancelation"
+    (length listed2) 1
+  _ <- ProposedMatch.acceptMatch handle proposedMatch2
+  listed3 <- ProposedMatch.listProposedMatches handle (Matchup.matchupID matchup)
+  assertEqual "there are no unaccepted, uncanceled matches after acceptance"
+    (length listed3) 0
+  updated <- ProposedMatch.cancelMatch handle (ProposedMatch.proposedMatchID proposedMatch2)
+  assertEqual "cancelling an already accepted match shouldn't do anything" updated 0
