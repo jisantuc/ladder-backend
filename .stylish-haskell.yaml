@@ -227,3 +227,5 @@ newline: native
 language_extensions:
   - TemplateHaskell
   - QuasiQuotes
+  - DataKinds
+  - TypeOperators

@@ -1,9 +1,11 @@
 module Data.Ladder.Player ( Player (..), playerToUpdate ) where
 
+import           Data.Aeson
 import           Data.UUID                          (UUID)
 import qualified Database.PostgreSQL.Simple.FromRow as Postgres
 import qualified Database.PostgreSQL.Simple.ToRow   as Postgres
 import           GHC.Generics                       (Generic)
+import           Servant.Auth.Server
 
 data Player = Player { playerID         :: UUID
                      , email            :: String
@@ -13,6 +15,10 @@ data Player = Player { playerID         :: UUID
 
 instance Postgres.FromRow Player
 instance Postgres.ToRow Player
+instance ToJSON Player
+instance FromJSON Player
+instance ToJWT Player
+instance FromJWT Player
 
 {- Player records for update queries
 

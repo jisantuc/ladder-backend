@@ -5,4 +5,6 @@ import Network.Wai.Handler.Warp
 import Server
 
 main :: IO ()
-main = run 8081 application
+main = do
+  app <- application
+  run 8081 app

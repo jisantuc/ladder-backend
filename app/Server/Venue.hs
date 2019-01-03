@@ -1,21 +1,24 @@
 module Server.Venue where
 
-import Config (defaultHandle)
-import Control.Monad.IO.Class (MonadIO (..))
-import Data.Ladder.Venue
-import Data.Maybe (fromMaybe)
-import Database.Ladder.Venue
-import qualified Data.Ladder.Time as Time
+import           Config                           (defaultHandle)
+import           Control.Monad.IO.Class           (MonadIO (..))
+import           Data.Ladder.Player               (Player)
+import qualified Data.Ladder.Time                 as Time
+import           Data.Ladder.Venue
+import           Data.Maybe                       (fromMaybe)
+import           Database.Ladder.Venue
 import qualified Database.PostgreSQL.Simple.Types as Postgres
-import Servant.Server
-import Servant
+import           Servant
+import           Servant.Auth.Server
+import           Servant.Server
 
-import Data.UUID (UUID)
 
-import Debug.Trace
+import           Data.UUID                        (UUID)
+
+import           Debug.Trace
 
 type VenueAPI =
-  "venues" :> QueryParam "freeNights" [Time.DayOfWeek] :> Get '[JSON] [Venue]
+  Auth '[JWT] Player :> "venues" :> QueryParam "freeNights" [Time.DayOfWeek] :> Get '[JSON] [Venue]
   -- :<|> "venues" :> Capture "venueID" UUID :> Get '[JSON] Venue
   -- :<|> "venues" :> Put '[JSON] Int
   -- :<|> "venues" :> Delete '[JSON] Int
@@ -30,4 +33,5 @@ venueListHandler maybeDaysOfWeek = do
       Postgres.PGArray $ fromMaybe Time.allDaysOfWeek maybeDaysOfWeek
 
 venueServer :: Server VenueAPI
-venueServer = venueListHandler
+venueServer (Authenticated _) = venueListHandler
+venueServer _                 = throwAll err401
