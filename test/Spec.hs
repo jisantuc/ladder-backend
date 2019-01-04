@@ -1,6 +1,7 @@
 module Main (main) where
 
 import           Data.Int                         (Int64)
+import qualified Data.Ladder.ClientInfo           as ClientInfo
 import qualified Data.Ladder.Match                as Match
 import qualified Data.Ladder.Matchup              as Matchup
 import qualified Data.Ladder.Player               as Player
@@ -11,6 +12,7 @@ import qualified Data.Ladder.Time                 as Time
 import qualified Data.Ladder.Venue                as Venue
 import qualified Data.UUID.V4                     as UUIDv4
 import qualified Database.Ladder                  as Database
+import qualified Database.Ladder.ClientInfo       as ClientInfo
 import qualified Database.Ladder.Match            as Match
 import qualified Database.Ladder.Matchup          as Matchup
 import qualified Database.Ladder.Player           as Player
@@ -25,6 +27,7 @@ import           Rating                           (eloUpdateWithConstant,
                                                    matchSeqLikelihood,
                                                    matchSeqWinProbability, race,
                                                    validateMatchup)
+import qualified Servant.Auth.Server              as SAS
 import           Test.Hspec
 import           Test.HUnit
 
@@ -69,6 +72,7 @@ dbSpec = do
   venueDBSpec
   matchupDBSpec
   proposedMatchDBSpec
+  clientInfoDBSpec
 
 seasonDBSpec :: Assertion
 seasonDBSpec = do
@@ -343,3 +347,20 @@ proposedMatchDBSpec = do
     (length listed3) 0
   updated <- ProposedMatch.cancelMatch handle (ProposedMatch.proposedMatchID proposedMatch2)
   assertEqual "cancelling an already accepted match shouldn't do anything" updated 0
+
+clientInfoDBSpec :: Assertion
+clientInfoDBSpec = do
+  handle <- defaultHandle
+  key <- jwk <$> defaultConfig
+  player1 <- (\playerID -> Player.Player playerID "userwithpass@haspass.com" "Bogus" "Name" True) <$>
+    UUIDv4.nextRandom
+  _ <- Player.createPlayer handle player1
+  _ <- ClientInfo.storePassword handle $ ClientInfo.ClientInfo "userwithpass@haspass.com" "reallygoodpassword"
+  jwtSettings <- pure $ SAS.defaultJWTSettings key
+  withBadPass <- ClientInfo.getJWT handle jwtSettings (ClientInfo.ClientInfo "userwithpass@haspass.com" "wrong")
+  assertEqual "Getting a jwt with the wrong password shouldn't work" withBadPass (Left BadPassword)
+  withGoodPass <- ClientInfo.getJWT handle jwtSettings $ ClientInfo.ClientInfo "userwithpass@haspass.com" "reallygoodpassword"
+  assertEqual "Using the correct password correctly fetches a JWT" "yes" $
+    case withGoodPass of
+      Left _  -> "no"
+      Right _ -> "yes"

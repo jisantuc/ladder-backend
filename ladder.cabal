@@ -92,7 +92,9 @@ test-suite ladder-test
                      , hspec
                      , HUnit
                      , bytestring >= 0.10.8.2 && < 0.11
+                     , jose >= 0.7.0.0 && < 0.8
                      , postgresql-simple >= 0.5.4.0 && < 0.6
+                     , servant-auth-server
                      , time >= 1.8.0.2 && < 1.9
                      , uuid >= 1.3.13 && < 1.4
   other-modules:       Config
