@@ -35,7 +35,7 @@ instance Postgres.ToRow PlayerUpdate
 
 playerToUpdate :: Player -> PlayerUpdate
 playerToUpdate player = PlayerUpdate { _email = email player
-                               , _first = firstName player
-                               , _last = lastName player
-                               , _accepting = acceptingMatches player
-                               , _playerID = playerID player }
+                                     , _first = firstName player
+                                     , _last = lastName player
+                                     , _accepting = acceptingMatches player
+                                     , _playerID = playerID player }
