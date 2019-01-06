@@ -4,4 +4,5 @@ data Message =
   UnbalancedMatch String
   | NotYourMatch
   | MatchAlreadySubmitted
+  | BadPassword
   deriving (Eq, Show)

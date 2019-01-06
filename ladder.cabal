@@ -15,7 +15,8 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Data.Ladder.Match
+  exposed-modules:     Data.Ladder.ClientInfo
+                     , Data.Ladder.Match
                      , Data.Ladder.Matchup
                      , Data.Ladder.Player
                      , Data.Ladder.ProposedMatch
@@ -24,6 +25,7 @@ library
                      , Data.Ladder.Time
                      , Data.Ladder.Venue
                      , Database.Ladder
+                     , Database.Ladder.ClientInfo
                      , Database.Ladder.Match
                      , Database.Ladder.Matchup
                      , Database.Ladder.Player
@@ -35,15 +37,19 @@ library
                      , Rating
   build-depends:       base >= 4.7 && < 5
                      , aeson
+                     , bcrypt >= 0.0.11 && < 0.0.12
                      , bytestring >= 0.10.8.2 && < 0.11
-                     , servant-server
                      , postgresql-simple >= 0.5.4.0 && < 0.6
+                     , servant-server
+                     , servant-auth
+                     , servant-auth-server
                      , statistics >= 0.14.0.2 && < 0.15
                      , text
                      , time >= 1.8.0.2 && < 1.9
                      , uuid >= 1.3.13 && < 1.4
                      , wai
                      , warp
+                     , wreq
   default-language:    Haskell2010
   default-extensions:  DeriveGeneric
                      , OverloadedStrings
@@ -57,11 +63,14 @@ executable ladder-exe
   other-modules:       Config
                      , Server
                      , Server.Venue
+                     , Server.Token
   main-is:             Main.hs
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
                      , ladder
-                     , servant-server
+                     , aeson
+                     , servant-auth-server
+                     , jose >= 0.7.0.0 && < 0.8
                      , bytestring >= 0.10.8.2 && < 0.11
                      , postgresql-simple >= 0.5.4.0 && < 0.6
                      , servant-server
@@ -71,6 +80,7 @@ executable ladder-exe
   default-language:    Haskell2010
   default-extensions:  DataKinds
                      , TypeOperators
+                     , DeriveGeneric
 
 test-suite ladder-test
   type:                exitcode-stdio-1.0
@@ -81,7 +91,9 @@ test-suite ladder-test
                      , hspec
                      , HUnit
                      , bytestring >= 0.10.8.2 && < 0.11
+                     , jose >= 0.7.0.0 && < 0.8
                      , postgresql-simple >= 0.5.4.0 && < 0.6
+                     , servant-auth-server
                      , time >= 1.8.0.2 && < 1.9
                      , uuid >= 1.3.13 && < 1.4
   other-modules:       Config

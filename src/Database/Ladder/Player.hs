@@ -1,4 +1,5 @@
 module Database.Ladder.Player ( getPlayer
+                              , getPlayerByEmail
                               , createPlayer
                               , updatePlayer
                               , deletePlayer
@@ -19,6 +20,15 @@ getPlayer handle playerID =
                      WHERE id = ?;|]
   in
     Postgres.query (Database.conn handle) fetchQuery (Postgres.Only playerID)
+
+getPlayerByEmail :: Database.Handle -> String -> IO [Player]
+getPlayerByEmail handle email =
+  let
+    fetchQuery = [sql|SELECT id, email, first_name, last_name, accepting_matches
+                     FROM players
+                     WHERE email = ?;|]
+  in
+    Postgres.query (Database.conn handle) fetchQuery (Postgres.Only email)
 
 createPlayer :: Database.Handle -> Player -> IO [Player]
 createPlayer handle player =
