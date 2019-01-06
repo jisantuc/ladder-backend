@@ -1,7 +1,8 @@
-module Data.Ladder.Player ( Player (..), playerToUpdate ) where
+module Data.Ladder.Player ( Player (..), playerToUpdate, makePlayer ) where
 
 import           Data.Aeson
 import           Data.UUID                          (UUID)
+import qualified Data.UUID.V4                       as UUIDv4
 import qualified Database.PostgreSQL.Simple.FromRow as Postgres
 import qualified Database.PostgreSQL.Simple.ToRow   as Postgres
 import           GHC.Generics                       (Generic)
@@ -39,3 +40,7 @@ playerToUpdate player = PlayerUpdate { _email = email player
                                      , _last = lastName player
                                      , _accepting = acceptingMatches player
                                      , _playerID = playerID player }
+
+makePlayer :: String -> String -> String -> IO Player
+makePlayer e f l =
+  (\x -> Player x e f l False) <$> UUIDv4.nextRandom

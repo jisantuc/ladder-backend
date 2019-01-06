@@ -13,14 +13,14 @@ type LadderAPI =
 api :: Proxy LadderAPI
 api = Proxy
 
-server :: Server LadderAPI
-server =
+server :: JWTSettings -> Server LadderAPI
+server settings =
   venueServer :<|>
-  tokenServer
+  tokenServer settings
 
 application :: IO Application
 application = do
   key <- jwk <$> defaultConfig
   jwtSettings <- pure $ defaultJWTSettings key
   cfg <- pure $  jwtSettings :. defaultCookieSettings :. EmptyContext
-  return $ serveWithContext api cfg server
+  return $ serveWithContext api cfg (server jwtSettings)

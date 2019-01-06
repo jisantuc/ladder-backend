@@ -14,7 +14,9 @@ import qualified Servant.Auth.Server        as SAS
 import           Servant.Server
 
 
-data TokenResp = TokenResp { key :: String } deriving (Eq, Show, Generic)
+data TokenResp =
+  TokenResp { key :: String }
+  | TokenError { msg :: String } deriving (Eq, Show, Generic)
 instance ToJSON TokenResp
 
 type TokenAPI =
@@ -22,17 +24,15 @@ type TokenAPI =
   :> ReqBody '[JSON] ClientInfo
   :> Post '[JSON] TokenResp
 
-tokenPostHandler :: ClientInfo -> Handler TokenResp
-tokenPostHandler clientInfo = do
+tokenPostHandler :: SAS.JWTSettings -> ClientInfo -> Handler TokenResp
+tokenPostHandler jwtSettings clientInfo = do
   handle <- liftIO defaultHandle
-  key <- liftIO $ jwk <$> defaultConfig
-  jwtSettings <- pure $ SAS.defaultJWTSettings key
   jwtResult <- liftIO $ getJWT handle jwtSettings clientInfo
   case jwtResult of
     Right key ->
       pure $ TokenResp (unpack . toStrict $ key)
     Left _ ->
-      error "Could not get JWT from user and pass"
+      pure $ TokenError "Could not get JWT from user and pass"
 
-tokenServer :: Server TokenAPI
-tokenServer = tokenPostHandler
+tokenServer :: SAS.JWTSettings -> Server TokenAPI
+tokenServer settings = tokenPostHandler settings

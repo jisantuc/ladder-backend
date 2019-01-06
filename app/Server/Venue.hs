@@ -9,7 +9,7 @@ import           Data.Maybe                       (fromMaybe)
 import           Database.Ladder.Venue
 import qualified Database.PostgreSQL.Simple.Types as Postgres
 import           Servant
-import           Servant.Auth.Server
+import qualified Servant.Auth.Server              as SAS
 import           Servant.Server
 
 
@@ -18,7 +18,7 @@ import           Data.UUID                        (UUID)
 import           Debug.Trace
 
 type VenueAPI =
-  Auth '[JWT] Player :> "venues" :> QueryParam "freeNights" [Time.DayOfWeek] :> Get '[JSON] [Venue]
+  SAS.Auth '[SAS.JWT] Player :> "venues" :> QueryParam "freeNights" [Time.DayOfWeek] :> Get '[JSON] [Venue]
   -- :<|> "venues" :> Capture "venueID" UUID :> Get '[JSON] Venue
   -- :<|> "venues" :> Put '[JSON] Int
   -- :<|> "venues" :> Delete '[JSON] Int
@@ -33,5 +33,5 @@ venueListHandler maybeDaysOfWeek = do
       Postgres.PGArray $ fromMaybe Time.allDaysOfWeek maybeDaysOfWeek
 
 venueServer :: Server VenueAPI
-venueServer (Authenticated _) = venueListHandler
-venueServer _                 = throwAll err401
+venueServer (SAS.Authenticated _) = venueListHandler
+venueServer _                     = SAS.throwAll err401
