@@ -73,8 +73,8 @@ submitMatch handle match =
       case validation of
         Right Nothing ->
           Right <$> Postgres.query (Database.conn handle) insertQuery (match { validated = False })
-        Right (Just prior) ->
-          Right <$> if (prior == (player1Wins match, player2Wins match)) then
+        Right (Just (p1, p2)) ->
+          Right <$> if ((Just p1, Just p2) == (player1Wins match, player2Wins match)) then
                       Postgres.query (Database.conn handle) insertQuery (match { validated = True }) <*
                       Postgres.execute (Database.conn handle) updateOtherMatchQuery (matchup match, submittedBy match)
                     else

@@ -13,8 +13,8 @@ data Match = Match { matchID     :: UUID
                    , matchup     :: UUID
                    , startTime   :: Time.SqlTime
                    , recorded    :: Time.SqlTime
-                   , player1Wins :: Int
-                   , player2Wins :: Int
+                   , player1Wins :: Maybe Int
+                   , player2Wins :: Maybe Int
                    , validated   :: Bool
                    , submittedBy :: UUID } deriving (Eq, Show, Generic)
 
@@ -24,8 +24,8 @@ instance Postgres.FromRow Match
 data MatchWithRelated = MatchWithRelated { _matchID     :: UUID
                                          , _startTime   :: Time.SqlTime
                                          , _recorded    :: Time.SqlTime
-                                         , _player1Wins :: Int
-                                         , _player2Wins :: Int
+                                         , _player1Wins :: Maybe Int
+                                         , _player2Wins :: Maybe Int
                                          , _validated   :: Bool
                                          , _submittedBy :: UUID
                                          , season       :: UUID
@@ -36,8 +36,8 @@ data MatchWithRelated = MatchWithRelated { _matchID     :: UUID
 instance Postgres.ToRow MatchWithRelated
 instance Postgres.FromRow MatchWithRelated
 
-data MatchUpdate = MatchUpdate { newPlayer1Wins :: Int
-                               , newPlayer2Wins :: Int
+data MatchUpdate = MatchUpdate { newPlayer1Wins :: Maybe Int
+                               , newPlayer2Wins :: Maybe Int
                                , _matchID'      :: UUID } deriving (Eq, Show, Generic)
 
 instance Postgres.ToRow MatchUpdate

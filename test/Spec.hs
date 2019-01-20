@@ -238,8 +238,8 @@ matchupDBSpec = do
               (Matchup.matchupID matchup)
               currTime
               currTime
-              6
-              4
+              (pure 6)
+              (pure 4)
               True
               (Player.playerID player1)) <$>
               UUIDv4.nextRandom
@@ -254,8 +254,8 @@ matchupDBSpec = do
               (Matchup.matchupID matchup)
               currTime
               currTime
-              4
-              6
+              (pure 4)
+              (pure 6)
               True
               (Player.playerID player2)) <$>
               UUIDv4.nextRandom
@@ -263,7 +263,7 @@ matchupDBSpec = do
   match1Fetched <- Match.getMatch handle (Match.matchID match1)
   assertEqual "match1 still shouldn't be valid" (Match._validated $ head match1Fetched) False
   assertEqual "match2 should also be invalid" (Match.validated . head <$> matchSubmission2) (Right False)
-  _ <- Match.updateMatch handle (match2 { Match.player1Wins = 6, Match.player2Wins = 4 })
+  _ <- Match.updateMatch handle (match2 { Match.player1Wins = pure 6, Match.player2Wins = pure 4 })
   match1FetchedAgain <- Match.getMatch handle (Match.matchID match1)
   match2Fetched <- Match.getMatch handle (Match.matchID match2)
   assertEqual "match1 should be valid" (Match._validated $ head match1FetchedAgain) True
