@@ -14,7 +14,8 @@ data Venue = Venue { venueID      :: UUID
                    , phone        :: String
                    , address      :: String
                    , leagueNights :: Time.DaysOfWeek
-                   , cost         :: Maybe Double } deriving (Eq, Show, Generic)
+                   , cost         :: Maybe Double
+                   , isActive     :: Bool } deriving (Eq, Show, Generic)
 
 instance Postgres.ToRow Venue
 instance Postgres.FromRow Venue
@@ -22,12 +23,13 @@ instance Postgres.FromRow Venue
 instance ToJSON Venue
 instance FromJSON Venue
 
-data VenueUpdate = VenueUpdate { _name :: String
-                               , _phone :: String
-                               , _address :: String
+data VenueUpdate = VenueUpdate { _name         :: String
+                               , _phone        :: String
+                               , _address      :: String
                                , _leagueNights :: Time.DaysOfWeek
-                               , _cost :: Maybe Double
-                               , _venueID :: UUID } deriving (Eq, Show, Generic)
+                               , _cost         :: Maybe Double
+                               , _isActive     :: Bool
+                               , _venueID      :: UUID } deriving (Eq, Show, Generic)
 
 instance Postgres.ToRow VenueUpdate
 
@@ -37,4 +39,5 @@ venueToUpdate venue = VenueUpdate { _name = name venue
                                   , _address = address venue
                                   , _leagueNights = leagueNights venue
                                   , _cost = cost venue
+                                  , _isActive = isActive venue
                                   , _venueID = venueID venue }

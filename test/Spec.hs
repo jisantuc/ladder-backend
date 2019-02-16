@@ -144,7 +144,8 @@ venueDBSpec = do
               "2670001234"
               "Somewhere in Center City, Philadelphia, PA"
               (Time.DaysOfWeek $ Postgres.PGArray [])
-              (Just 10.75)) <$> UUIDv4.nextRandom
+              (Just 10.75)
+              True) <$> UUIDv4.nextRandom
   inserted <- Venue.createVenue handle venue
   retrieved <- Venue.getVenue handle (Venue.venueID venue)
   assertEqual "return from fetch is the same as return from insert" inserted retrieved
@@ -187,14 +188,16 @@ matchupDBSpec = do
               "2670001234"
               "Somewhere in Center City, Philadelphia, PA"
               (Time.DaysOfWeek $ Postgres.PGArray [Time.Monday, Time.Tuesday])
-              (Just 10.75)) <$> UUIDv4.nextRandom
+              (Just 10.75)
+              True) <$> UUIDv4.nextRandom
   otherVenue <- (\venueID ->
               Venue.Venue venueID
               "Not Fun Pool Hall"
               "2670001234"
               "Somewhere in Center City, Philadelphia, PA"
               (Time.DaysOfWeek $ Postgres.PGArray [Time.Monday, Time.Tuesday])
-              (Just 10.75)) <$> UUIDv4.nextRandom
+              (Just 10.75)
+              True) <$> UUIDv4.nextRandom
   _ <- Season.createSeason handle season
   _ <- Player.createPlayer handle player1
   _ <- Player.createPlayer handle player2
@@ -286,14 +289,16 @@ proposedMatchDBSpec = do
               "2670001234"
               "Somewhere in Center City, Philadelphia, PA"
               (Time.DaysOfWeek $ Postgres.PGArray [Time.Monday, Time.Tuesday])
-              (Just 10.75)) <$> UUIDv4.nextRandom
+              (Just 10.75)
+              True) <$> UUIDv4.nextRandom
   otherVenue <- (\venueID ->
               Venue.Venue venueID
               "Not Fun Pool Hall"
               "2670001234"
               "Somewhere in Center City, Philadelphia, PA"
               (Time.DaysOfWeek $ Postgres.PGArray [Time.Monday, Time.Tuesday])
-              (Just 10.75)) <$> UUIDv4.nextRandom
+              (Just 10.75)
+              True) <$> UUIDv4.nextRandom
   player1 <- (\playerID -> Player.Player playerID "foo@bogus.com" "Bogus" "Name" True) <$> UUIDv4.nextRandom
   player2 <- (\playerID -> Player.Player playerID "bar@absurd.com" "Bogus" "Name" True) <$> UUIDv4.nextRandom
   season <- (\seasonID -> Season.Season seasonID 2019 Time.Summer) <$> UUIDv4.nextRandom

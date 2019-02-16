@@ -16,7 +16,7 @@ import qualified Database.PostgreSQL.Simple.Types as Postgres
 getVenue :: Database.Handle -> UUID -> IO [Venue]
 getVenue handle venueID =
   let
-    fetchQuery = [sql|SELECT id, name, phone, address, league_nights, cost
+    fetchQuery = [sql|SELECT id, name, phone, address, league_nights, cost, is_active
                      FROM venues
                      WHERE id = ?;|]
   in
@@ -25,9 +25,9 @@ getVenue handle venueID =
 createVenue :: Database.Handle -> Venue -> IO [Venue]
 createVenue handle venue =
   let
-    insertQuery = [sql|INSERT INTO venues (id, name, phone, address, league_nights, cost)
-                      VALUES (?, ?, ?, ?, ? :: day_of_week[], ?)
-                      RETURNING id, name, phone, address, league_nights, cost; |]
+    insertQuery = [sql|INSERT INTO venues (id, name, phone, address, league_nights, cost, is_active)
+                      VALUES (?, ?, ?, ?, ? :: day_of_week[], ?, ?)
+                      RETURNING id, name, phone, address, league_nights, cost, is_active; |]
   in
     Postgres.query (Database.conn handle) insertQuery venue
 
@@ -35,7 +35,9 @@ updateVenue :: Database.Handle -> Venue -> IO Int64
 updateVenue handle venue =
   let
     updateQuery = [sql|UPDATE venues
-                      SET name = ?, phone = ?, address = ?, league_nights = (? :: day_of_week[]), cost = ?
+                      SET
+                        name = ?, phone = ?, address = ?, league_nights = (? :: day_of_week[]),
+                        cost = ?, is_active = ?
                       WHERE id = ?;|]
   in
     Postgres.execute (Database.conn handle) updateQuery (venueToUpdate venue)
@@ -50,9 +52,10 @@ deleteVenue handle venue =
 listVenues :: Database.Handle -> Postgres.PGArray Time.DayOfWeek -> IO [Venue]
 listVenues handle (Postgres.PGArray desiredNights) =
   let
-    listQuery = [sql|SELECT id, name, phone, address, league_nights, cost
+    listQuery = [sql|SELECT id, name, phone, address, league_nights, cost, is_active
                     FROM venues
-                    WHERE NOT (? :: day_of_week[]) <@ league_nights;|]
+                    WHERE NOT (? :: day_of_week[]) <@ league_nights
+                    AND is_active = true;|]
     badNights = Postgres.PGArray desiredNights
   in
     Postgres.query (Database.conn handle) listQuery (Postgres.Only badNights)
