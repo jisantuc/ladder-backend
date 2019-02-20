@@ -63,6 +63,7 @@ executable ladder-exe
   other-modules:       Config
                      , Server
                      , Server.Match
+                     , Server.Matchup
                      , Server.Player
                      , Server.Venue
                      , Server.Token

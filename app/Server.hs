@@ -5,12 +5,14 @@ import           Data.Ladder.Time
 import           Servant
 import           Servant.Auth.Server
 import           Server.Match
+import           Server.Matchup
 import           Server.Player
 import           Server.Token
 import           Server.Venue
 
 type LadderAPI =
   MatchAPI
+  :<|> MatchupAPI
   :<|> PlayerAPI
   :<|> TokenAPI
   :<|> VenueAPI
@@ -21,6 +23,7 @@ api = Proxy
 server :: JWTSettings -> Server LadderAPI
 server settings =
   matchServer :<|>
+  matchupServer :<|>
   playerServer :<|>
   tokenServer settings :<|>
   venueServer

@@ -2,11 +2,13 @@ module Database.Ladder.Matchup ( getMatchup
                                , createMatchup
                                , scheduleMatchup
                                , deleteMatchup
+                               , listUnscheduledMatchups
                                , listMatchupsForPlayer
                                , listMatchupsAtVenue ) where
 
 import           Data.Int                         (Int64)
 import           Data.Ladder.Matchup
+import qualified Data.Ladder.Player               as Player
 import qualified Data.Ladder.Time                 as Time
 import           Data.UUID                        (UUID)
 import qualified Database.Ladder                  as Database
@@ -21,6 +23,28 @@ getMatchup handle matchupID =
                      WHERE id = ?;|]
   in
     Postgres.query (Database.conn handle) fetchQuery (Postgres.Only matchupID)
+
+listUnscheduledMatchups :: Database.Handle -> Player.Player -> IO [Matchup]
+listUnscheduledMatchups handle player =
+  let
+    fetchQuery = [sql|SELECT
+                     matchups.id,
+                     player1,
+                     player2,
+                     week,
+                     season,
+                     date,
+                     venue
+                     FROM
+                      matchups LEFT JOIN matches ON
+                      matches.matchup = matchups.id
+                     WHERE
+                       matches.matchup IS NULL
+                       AND player1 = ?
+                       OR player2 = ?; |]
+    pid = Player.playerID player
+  in
+    Postgres.query (Database.conn handle) fetchQuery (pid, pid)
 
 createMatchup :: Database.Handle -> Matchup -> IO [Matchup]
 createMatchup handle matchup =

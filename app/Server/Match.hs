@@ -14,7 +14,10 @@ import           Data.UUID              (UUID)
 
 type MatchAPI =
   SAS.Auth '[SAS.JWT] Player :> "matches" :> (
-  Capture "matchID" UUID :> Get '[JSON] (Maybe MatchWithRelated)
+  Get '[JSON] [MatchWithRelated]
+  :<|> Capture "matchID" UUID :> Get '[JSON] (Maybe MatchWithRelated)
+  :<|> Capture "matchID" UUID :> ReqBody '[JSON] Match :> Put '[JSON] NoContent
+  :<|> ReqBody '[JSON] Match :> Post '[JSON] (Maybe Match)
   )
 
 matchDetailHandler :: UUID -> Handler (Maybe MatchWithRelated)
@@ -22,6 +25,28 @@ matchDetailHandler id = liftIO $ do
   handle <- defaultHandle
   listToMaybe <$> getMatch handle id
 
+matchListHandler :: Player -> Handler [MatchWithRelated]
+matchListHandler player = liftIO $ do
+  handle <- defaultHandle
+  listMatches handle player
+
+matchUpdateHandler :: UUID -> Match -> Handler NoContent
+matchUpdateHandler id toUpdate = liftIO $ do
+  handle <- defaultHandle
+  if (id == matchID toUpdate) then
+    (\_ -> NoContent) <$> updateMatch handle toUpdate
+  else
+    pure NoContent
+
+matchCreateHandler :: Match -> Handler (Maybe Match)
+matchCreateHandler match = liftIO $ do
+  handle <- defaultHandle
+  either (\_ -> Nothing) listToMaybe <$> submitMatch handle match
+
+
 matchServer :: Server MatchAPI
 matchServer (SAS.Authenticated p) =
-  matchDetailHandler
+  matchListHandler p
+  :<|> matchDetailHandler
+  :<|> matchUpdateHandler
+  :<|> matchCreateHandler
