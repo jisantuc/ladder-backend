@@ -16,8 +16,6 @@ import           Servant.Server
 
 import           Data.UUID                        (UUID)
 
-import           Debug.Trace
-
 type VenueAPI =
   SAS.Auth '[SAS.JWT] Player :>
   ("venues" :> QueryParam "freeNights" [Time.DayOfWeek] :> Get '[JSON] [Venue]
