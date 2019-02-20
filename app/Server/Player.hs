@@ -13,7 +13,7 @@ import qualified Servant.Auth.Server    as SAS
 import           Servant.Server
 
 type PlayerAPI =
-  SAS.Auth '[SAS.JWT] Player :> (
+  SAS.Auth '[SAS.JWT] Player :> "players" :> (
   "me" :> Get '[JSON] (Maybe Player)
   :<|> "me" :> "recent-ratings" :> Capture "page-size" Int :> Get '[JSON] [Rating.Rating]
   )
