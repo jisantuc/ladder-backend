@@ -1,9 +1,11 @@
 module Database.Ladder.Match ( getMatch
+                             , listMatches
                              , submitMatch
                              , updateMatch ) where
 
 import           Data.Int                         (Int64)
 import           Data.Ladder.Match
+import qualified Data.Ladder.Player               as Player
 import           Data.UUID                        (UUID)
 import qualified Database.Ladder                  as Database
 import qualified Database.PostgreSQL.Simple       as Postgres
@@ -111,3 +113,14 @@ updateMatch handle match =
           pure nUpdated
         _ ->
           pure nUpdated
+
+listMatches :: Database.Handle -> Player.Player -> IO [MatchWithRelated]
+listMatches handle player =
+  let
+    fetchQuery = [sql|SELECT matches.id, start_time, recorded, player1_wins, player2_wins,
+                     validated, submitted_by, season, week, date, venue
+                     FROM matches join matchups on matches.matchup = matchups.id
+                    WHERE submitted_by = ?; |]
+  in
+    do
+      Postgres.query (Database.conn handle) fetchQuery (Postgres.Only $ Player.playerID player)

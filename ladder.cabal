@@ -62,6 +62,9 @@ executable ladder-exe
   hs-source-dirs:      app
   other-modules:       Config
                      , Server
+                     , Server.Match
+                     , Server.Matchup
+                     , Server.Player
                      , Server.Venue
                      , Server.Token
   main-is:             Main.hs

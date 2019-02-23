@@ -2,6 +2,7 @@ module Data.Ladder.Match ( Match (..)
                          , MatchWithRelated (..)
                          , matchToUpdate ) where
 
+import           Data.Aeson
 import qualified Data.Ladder.Time                   as Time
 import           Data.UUID                          (UUID)
 import qualified Database.PostgreSQL.Simple.FromRow as Postgres
@@ -20,6 +21,8 @@ data Match = Match { matchID     :: UUID
 
 instance Postgres.ToRow Match
 instance Postgres.FromRow Match
+instance ToJSON Match
+instance FromJSON Match
 
 data MatchWithRelated = MatchWithRelated { _matchID     :: UUID
                                          , _startTime   :: Time.SqlTime
@@ -35,6 +38,8 @@ data MatchWithRelated = MatchWithRelated { _matchID     :: UUID
 
 instance Postgres.ToRow MatchWithRelated
 instance Postgres.FromRow MatchWithRelated
+instance ToJSON MatchWithRelated
+instance FromJSON MatchWithRelated
 
 data MatchUpdate = MatchUpdate { newPlayer1Wins :: Maybe Int
                                , newPlayer2Wins :: Maybe Int

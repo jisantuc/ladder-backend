@@ -115,10 +115,19 @@ instance Postgres.FromField Session where
 
 newtype SqlTime = SqlTime ZonedTimestamp deriving (Show)
 
+instance FromJSON SqlTime where
+  parseJSON v = SqlTime . Finite <$> parseJSON v
+
+instance ToJSON SqlTime where
+  toJSON (SqlTime (Finite t))  = toJSON t
+  toJSON (SqlTime NegInfinity) = toJSON ("1900-01-01T00:00:00Z" :: String)
+  toJSON (SqlTime PosInfinity) = toJSON ("3000-01-01T00:00:00Z" :: String)
+
 instance Postgres.ToField SqlTime where
   toField (SqlTime t) = Postgres.Plain . Postgres.inQuotes . zonedTimestampToBuilder $ t
 instance Postgres.FromField SqlTime where
   fromField f v = SqlTime <$> Postgres.fromField f v
+
 instance Eq SqlTime where
   (/=) (SqlTime (Finite t1)) (SqlTime (Finite t2)) =
     zonedTimeToUTC t1 /= zonedTimeToUTC t2

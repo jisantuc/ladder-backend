@@ -13,17 +13,14 @@ import           Servant
 import qualified Servant.Auth.Server              as SAS
 import           Servant.Server
 
-
 import           Data.UUID                        (UUID)
 
-import           Debug.Trace
-
 type VenueAPI =
-  SAS.Auth '[SAS.JWT] Player :>
-  ("venues" :> QueryParam "freeNights" [Time.DayOfWeek] :> Get '[JSON] [Venue]
-  :<|> "venues" :> Capture "venueID" UUID :> Get '[JSON] (Maybe Venue)
-  :<|> "venues" :> Capture "venueID" UUID :> ReqBody '[JSON] Venue :> Put '[JSON] Int64
-  :<|> "venues" :> ReqBody '[JSON] Venue :> PostCreated '[JSON] (Maybe Venue)
+  SAS.Auth '[SAS.JWT] Player :> "venues" :> (
+  QueryParam "freeNights" [Time.DayOfWeek] :> Get '[JSON] [Venue]
+  :<|> Capture "venueID" UUID :> Get '[JSON] (Maybe Venue)
+  :<|> Capture "venueID" UUID :> ReqBody '[JSON] Venue :> Put '[JSON] Int64
+  :<|> ReqBody '[JSON] Venue :> PostCreated '[JSON] (Maybe Venue)
   )
 
 venueCreateHandler :: Venue -> Handler (Maybe Venue)

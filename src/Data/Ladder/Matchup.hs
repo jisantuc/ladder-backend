@@ -1,5 +1,6 @@
 module Data.Ladder.Matchup ( Matchup (..), VenueFilter (..) ) where
 
+import           Data.Aeson
 import qualified Data.Ladder.Time                   as Time
 import           Data.UUID                          (UUID)
 import qualified Database.PostgreSQL.Simple.FromRow as Postgres
@@ -16,6 +17,8 @@ data Matchup = Matchup { matchupID :: UUID
 
 instance Postgres.ToRow Matchup
 instance Postgres.FromRow Matchup
+instance ToJSON Matchup
+instance FromJSON Matchup
 
 data VenueFilter = VenueFilter { dayOfWeek :: Time.SqlTime
                                , venueID   :: UUID} deriving (Eq, Show, Generic)
